@@ -29,7 +29,7 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
 
         for (const site of rsitesParts) {
             allRsites.push([molLabel, site]);
-            sys.stdout.write
+            //sys.stdout.write
         }
     }
 
