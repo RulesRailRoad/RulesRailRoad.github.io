@@ -977,7 +977,7 @@ export class Terminal extends DiagramItem {
                     let up, down, up_height;
 
                     if (this.bond_type === "circle") {
-                        const term = new Terminal(this.bond_num, { box_color: "white" });
+                        const term = new NonTerminal(this.bond_num, { box_color: "white" });
                         term.width *= 0.78;
                         term.format(cx - term.width / 2, cy, term.width).addTo(this);
                         cy += term.height / 2 + term.down;
@@ -992,15 +992,19 @@ export class Terminal extends DiagramItem {
                         }[this.bond_type];
 
                         if (arrow) {
-                            const up = new NonTerminal(arrow, { box_color: "orange" });
+                            const up = new NonTerminal(this.bond_num, { box_color: "white" });
                             const up_height = up.up + up.down - 2;
-                            up.width *= 0.75;
-                            up.format(cx - up.width / 2, cy - up_height + up.up, up.width).addTo(this);
+                            
 
-                            const down = new NonTerminal(this.bond_num, { box_color: "white" });
+                            const down = new NonTerminal(arrow, { box_color: "orange" });
                             if (this.bond_type === "nrbroken" || this.bond_type === "nradded") {
                                 down.width *= 0.75;
+                                up.width *= 0.75;
                             }
+                            else if (this.bond_type === "rbroken" || this.bond_type === "radded") {
+                                down.width *= 0.78;
+                            }
+                            up.format(cx - up.width / 2, cy - up_height + up.up, up.width).addTo(this);
                             down.format(cx - down.width / 2, cy + up_height / 2, down.width).addTo(this);
 
                             if (down.formatted_y !== undefined) {
@@ -1180,7 +1184,7 @@ export class NonTerminal extends DiagramItem {
                     if (this.bond_type === "circle") {
                         cx = x + width / 2;
                         cy = y + this.height + AR * 4;
-                        const term = new Terminal(this.bond_num, { box_color: "white" });
+                        const term = new NonTerminal(this.bond_num, { box_color: "white" });
                         term.width *= 0.78;
                         term.format(cx - term.width / 2, cy, term.width).addTo(this);
                         cy += term.height / 2 + term.down;
@@ -1195,15 +1199,18 @@ export class NonTerminal extends DiagramItem {
                         }[this.bond_type];
 
                         if (arrow) {
-                            const up = new NonTerminal(arrow, { box_color: "orange" });
+                            const up = new NonTerminal(this.bond_num, { box_color: "white" });
                             const up_height = up.up + up.down - 2;
-                            up.width *= 0.75;
-                            up.format(cx - up.width / 2, cy - up_height + up.up, up.width).addTo(this);
-
-                            const down = new NonTerminal(this.bond_num, { box_color: "white" });
+                    
+                            const down = new NonTerminal(arrow, { box_color: "orange" });
                             if (this.bond_type === "nrbroken" || this.bond_type === "nradded") {
                                 down.width *= 0.75;
+                                up.width *= 0.75;
                             }
+                            else if (this.bond_type === "rbroken" || this.bond_type === "radded") {
+                                down.width *= 0.78;
+                            }
+                            up.format(cx - up.width / 2, cy - up_height + up.up, up.width).addTo(this);
                             down.format(cx - down.width / 2, cy + up_height / 2, down.width).addTo(this);
 
                             if (down.formatted_y !== undefined) {

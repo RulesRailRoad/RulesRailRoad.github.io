@@ -1,6 +1,6 @@
 // Molecules_BNGL_to_Python.js
 
-export function bnglToRailroad(bnglString, displayString = null, changesDict = null, molSiteDict = {}) {
+export function bnglToRailroad(bnglString, displayString = null, changesDict = null, molSiteDict = {}, useBNGL) {
     const MoleculeColor = 'lightgreen';
     const SiteColor = 'lightblue';
     const StateColor = 'khaki';
@@ -13,8 +13,9 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
     const stateChangeDown = "change from top state to bottom state";
 
     const molChunks = bnglString.split('.');
+    const label = useBNGL ? (displayString || bnglString).trim() : " ";
     const diagrams = [
-        `add(\"${(displayString || bnglString).trim()}\",`,
+        `add("${label}",`,
         "    new Diagram("
     ];
 
@@ -159,5 +160,6 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
     });
 
     diagrams.push("    )\n)");
+
     return diagrams.join("\n") + "\n";
 }

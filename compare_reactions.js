@@ -12,7 +12,6 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
     const changesDict = {};
     const rmolCounter = {};
     const pmolCounter = {};
-    //output.push('sys.stdout.write("Started compareReactions\\n")');
 
     const reactantParts = expandedReactants.split(".");
     const productParts = expandedProducts.split(".");
@@ -24,12 +23,10 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
         const rsitesParts = rsites.split(",");
 
         rmolCounter[rmol] = (rmolCounter[rmol] || 0) + 1;
-         
         const molLabel = `${rmol} #${rmolCounter[rmol]}`;
 
         for (const site of rsitesParts) {
             allRsites.push([molLabel, site]);
-            //sys.stdout.write
         }
     }
 
