@@ -1,5 +1,5 @@
 // bngl_parser.js
-import { expandExpr } from './_expanded.js';
+import { expandExpr } from './expanded.js';
 import { compareReactions, stateChangeUp, stateChangeDown, bondAddedNonRev, bondRemovedNonRev, bondAddedRev, bondRemovedRev } from './compare_reactions.js';
 import { bnglToRailroad } from './Molecules_BNGL_to_Python.js';
 
