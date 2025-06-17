@@ -96,7 +96,6 @@
 
     // Global 'add' function used in output from parseBNGLFile
     window.add = function(label, diagram) {
-    console.log("🔍 Final label JS:\n", label);
     const area = document.getElementById("diagramArea");
 
     const container = document.createElement("div");
@@ -115,7 +114,6 @@
     svgContainer.innerHTML = svgString;
 
     container.appendChild(title);
-    console.log("🔍 Final output JS:\n", output);
     container.appendChild(svgContainer);
     area.appendChild(container);
     };
