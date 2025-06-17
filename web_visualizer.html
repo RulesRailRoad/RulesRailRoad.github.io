@@ -62,7 +62,8 @@
   <div class="section">
     <label for="bnglFile">Input BNGL File:</label>
     <input type="file" id="bnglFile" accept=".bngl" />
-    <label><input type="checkbox" id="showComments" checked /> Display BNGL next to cartoons</label>
+    <label><input type="checkbox" id="showComments" checked /> Display comment lines next to cartoons</label>
+    <label><input type="checkbox" id="showBNGLString" checked /> Display BNGL next to cartoons</label>
     <label><input type="checkbox" id="useBNGLNotations" checked /> Use BNGL notations</label>
   </div>
 
@@ -146,8 +147,9 @@
 
         try {
             const useBNGL = document.getElementById("useBNGLNotations").checked;
+            const showBNGLString = document.getElementById("showBNGLString").checked;
             const showComments = document.getElementById("showComments").checked;
-            const output = await parseBNGLFile(bnglText, useBNGL, showComments); // generates JS code
+            const output = await parseBNGLFile(bnglText, useBNGL, showComments, showBNGLString); // generates JS code
             bnglOutputBox.textContent = output || "(No output generated)";
 
             const script = document.createElement("script");
