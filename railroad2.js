@@ -1088,7 +1088,8 @@ export class NonTerminal extends DiagramItem {
         top_bind_color = "black",
         bond_num = null,
         bond_type = "circle",
-        wrap = false
+        wrap = false,
+        state_and_bond_wrap = false
     } = {}) {
         super("g", { class: ["non-terminal", cls].join(" ") });
         this.text = text;
@@ -1109,6 +1110,7 @@ export class NonTerminal extends DiagramItem {
         this.bond_num = bond_num;
         this.bond_type = bond_type;
         this.wrap = wrap;
+        this.state_and_bond_wrap = state_and_bond_wrap;
 
         this.width = text.length * CHAR_WIDTH + 20;
         this.up = 11;
@@ -1160,7 +1162,25 @@ export class NonTerminal extends DiagramItem {
                 path2.attrs.class = "bottom-bind";
                 path2.attrs.style = "stroke: gray; stroke-dasharray: 4,2";
                 path2.addTo(this);
-            } else {
+            }
+            else {
+                if (this.state_and_bond_wrap) {
+                const arc_start = x - AR;
+                const arc_height = AR * 1.5;
+                const path1 = new Path(arc_start, y - AR / 2)
+                    .down(arc_height*4).arc("ws").right(width / 2 - AR).arc("ne");
+                path1.attrs.class = "bottom-bind";
+                path1.attrs.style = "stroke: black";
+                path1.addTo(this);
+
+                const path2 = new Path(x + AR + width, y - AR / 2)
+                    .down(arc_height*4).arc("es").left(width / 2 - AR).arc("nw");
+                path2.attrs.class = "bottom-bind";
+                path2.attrs.style = "stroke: black";
+                path2.addTo(this);
+                this._bond_arc_bottom_y = y - AR /2 + arc_height * 4 + AR * 2;
+                }
+                else {
                 const horiz_dist = width / 2 - AR;
                 const path1 = new Path(x, y + this.height)
                     .arc("nw").arc("ws").right(horiz_dist).arc("ne").down(this.height);
@@ -1178,6 +1198,7 @@ export class NonTerminal extends DiagramItem {
                 path2.attrs.class = "bottom-bind";
                 path2.attrs.style = style;
                 path2.addTo(this);
+                }
 
                 if (this.bond_num && this.bond_num !== "?" && this.bond_num !== "+") {
                     let cx = 0, cy = 0;
@@ -1190,7 +1211,7 @@ export class NonTerminal extends DiagramItem {
                         cy += term.height / 2 + term.down;
                     } else {
                         cx = x + width / 2;
-                        cy = y + this.height + AR * 5;
+                        cy = this._bond_arc_bottom_y || (y + this.height + AR * 5);
                         const arrow = {
                             nrbroken: "⬆",
                             nradded: "⬇",

@@ -11,6 +11,7 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
     const bondRemovedRev = "rbroken";
     const stateChangeUp = "change from bottom state to top state";
     const stateChangeDown = "change from top state to bottom state";
+    const bindAndStateChange = "bind_and_state_change";
 
     const molChunks = bnglString.split('.');
     const label = showBNGLString ? (displayString || bnglString).trim() : " ";
@@ -106,9 +107,17 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
                                 }
                             }
                             const ordered = stateList.filter(s => [reactantState, productState].includes(s));
+                            let extraLayoutArg = "";
+                            if (changes && changes.change.includes(bindAndStateChange)) {
+                                const isDown = changes.change.includes(stateChangeDown);
+                                const topState = isDown ? reactantState : productState;
+                                if (state == topState) {
+                                extraLayoutArg = ", state_and_bond_wrap: true";
+                                }
+                            }
                             const allStates = ordered.map(s => {
                                 const match = s === state ? `${bondArg}${bondNumArg}${bondTypeArg}` : "";
-                                return `new NonTerminal(\"${s}\", { box_color: \"${StateColor}\"${match} })`;
+                                return `new NonTerminal(\"${s}\", { box_color: \"${StateColor}\"${match}${extraLayoutArg} })`;
                             });
                             finStates.push(`new MultipleChoice(0, \"${direction}\", ${allStates.join(", ")})`);
                         } else {

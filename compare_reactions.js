@@ -6,6 +6,8 @@ const bondAddedNonRev = "nradded";
 const bondRemovedNonRev = "nrbroken";
 const bondAddedRev = "radded";
 const bondRemovedRev = "rbroken";
+const bindAndStateChange = "bind_and_state_change";
+
 
 
 function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDict) {
@@ -104,6 +106,14 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
                 }
             }
 
+            if (
+                rstate !== pstate &&
+                rbond !== pbond &&
+                rsite === psite
+            ) {
+                change.push(bindAndStateChange);
+            }
+
             changesDict[`${rmol}:${rsite}`] = {
                 molecule: rmol,
                 site: rsite,
@@ -124,5 +134,6 @@ export {
     bondAddedNonRev,
     bondRemovedNonRev,
     bondAddedRev,
-    bondRemovedRev
+    bondRemovedRev,
+    bindAndStateChange
 };
