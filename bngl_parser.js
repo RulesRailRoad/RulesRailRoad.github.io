@@ -170,6 +170,10 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
                 continue;
             }
 
+            if (line && /^\d/.test(line)) {
+                line = line.replace(/^\d+\s+/, '');
+            }
+            
             if (/^[^:\s]+:\s*/.test(line)) {
                 line = line.replace(/^[^:\s]+:\s*/, '');
             }
