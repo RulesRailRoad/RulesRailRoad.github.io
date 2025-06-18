@@ -8,7 +8,7 @@
   <style>
     body { font-family: sans-serif; margin: 2em; }
     .section { margin-bottom: 1.5em; }
-    label { display: block; margin-top: 0.5em; font-size: 0.92em;}
+    label { display: block; margin-top: 0.2em; font-size: 0.92em;}
     #output { display: flex; gap: 2em; margin-top: 2em; }
     #bnglOutput {
       white-space: pre-wrap;
@@ -26,9 +26,9 @@
     border-bottom: 1px solid #ccc;
     padding-bottom: 0.3em;
     }
-    #diagramArea h4 {
+    #diagramArea small {
     margin-top: 2em;
-    font-size: 1.4em;
+    font-size: 1.2em;
     }
     #diagramAreaContainer {
     width: 100%;
@@ -62,7 +62,7 @@
   <div class="section">
     <label for="bnglFile">Input BNGL File:</label>
     <input type="file" id="bnglFile" accept=".bngl" />
-    <label><input type="checkbox" id="showComments" checked /> Display comment lines next to cartoons</label>
+    <label><input type="checkbox" id="showComments" checked /> Display commented lines next to cartoons</label>
     <label><input type="checkbox" id="showBNGLString" checked /> Display BNGL next to cartoons</label>
     <label><input type="checkbox" id="useBNGLNotations" checked /> Use BNGL notations</label>
   </div>
@@ -97,6 +97,7 @@
 
     // Global 'add' function used in output from parseBNGLFile
     window.add = function(label, diagram) {
+    console.log("🔍 Final label JS:\n", label);
     const area = document.getElementById("diagramArea");
 
     const container = document.createElement("div");
@@ -115,6 +116,7 @@
     svgContainer.innerHTML = svgString;
 
     container.appendChild(title);
+    console.log("🔍 Final output JS:\n", output);
     container.appendChild(svgContainer);
     area.appendChild(container);
     };
@@ -179,9 +181,9 @@
             border-bottom: 1px solid #ccc;
             padding-bottom: 0.3em;
             }
-            h4 {
+            small {
             margin-top: 2em;
-            font-size: 1.6em;
+            font-size: 0.9em;
             }
             </style>`;
 

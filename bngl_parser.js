@@ -82,7 +82,7 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
                 if (showComments) {
                     output.push(
                     'document.getElementById("diagramArea").appendChild(' +
-                        `Object.assign(document.createElement("h4"), { textContent: "${lastComment}" })` +
+                        `Object.assign(document.createElement("small"), { textContent: "${lastComment}" })` +
                     ');');
                 }
                 continue;
@@ -108,7 +108,7 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
                 if (showComments) {
                     output.push(
                     'document.getElementById("diagramArea").appendChild(' +
-                        `Object.assign(document.createElement("h4"), { textContent: "${lastComment}" })` +
+                        `Object.assign(document.createElement("small"), { textContent: "${lastComment}" })` +
                     ');');
                 }
                 continue;
@@ -135,7 +135,7 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
                 if (showComments) {
                     output.push(
                     'document.getElementById("diagramArea").appendChild(' +
-                        `Object.assign(document.createElement("h4"), { textContent: "${lastComment}" })` +
+                        `Object.assign(document.createElement("small"), { textContent: "${lastComment}" })` +
                     ');');
                 }
                 continue;
@@ -164,7 +164,7 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
                 if (showComments) {
                     output.push(
                     'document.getElementById("diagramArea").appendChild(' +
-                        `Object.assign(document.createElement("h4"), { textContent: "${lastComment}" })` +
+                        `Object.assign(document.createElement("small"), { textContent: "${lastComment}" })` +
                     ');');
                 }
                 continue;
@@ -173,7 +173,7 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
             if (line && /^\d/.test(line)) {
                 line = line.replace(/^\d+\s+/, '');
             }
-            
+
             if (/^[^:\s]+:\s*/.test(line)) {
                 line = line.replace(/^[^:\s]+:\s*/, '');
             }
