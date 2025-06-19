@@ -420,6 +420,7 @@ export class Diagram extends DiagramMultiContainer {
         this.attrs["viewBox"] = `0 0 ${this.attrs["width"]} ${this.attrs["height"]}`;
 
         let i = 0;
+        let maxBondY = this.up + this.height + paddingTop;
         for (const coords of Object.values(bond_coords)) {
             if (coords.length >= 2) {
                 const [[x1, y1], [x2, y2]] = coords;
@@ -428,9 +429,13 @@ export class Diagram extends DiagramMultiContainer {
                 const bottom_y = y1 + vert;
                 const dist_up = bottom_y - y2;
                 new Path(x1, y1).down(vert).right(x2 - x1).up(dist_up).addTo(g).attrs["style"] = "stroke: black";
+
+                maxBondY = Math.max(maxBondY, bottom_y);
             }
             i++;
         }
+        this.attrs["height"] = (this.up + this.height + this.down + paddingTop + paddingBottom +maxBondY).toString();
+        this.attrs["viewBox"] = `0 0 ${this.attrs["width"]} ${this.attrs["height"]}`;
 
         bond_coords.clear?.(); // Safe clear
         g.addTo(this);

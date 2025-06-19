@@ -141,10 +141,25 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
                 continue;
             }
             const parts = line.split(/\s+/);
-            let expr = parts.slice(2).join(' ');
+
+            let expr = ' ';
+            if (parts.length === 2) {
+                expr = parts[1];
+            } else {
+                expr = parts.slice(2).join(' ')
+            }
             if (expr.includes(':')) expr = expr.split(':')[1];
+            if (expr.includes("), ")) {
+                expr = expr.split(", ")
+                for (const subExpr of expr) {
+                    const trimmed = subExpr.trim();
+                    const expanded = expandExpr(trimmed, molSiteDict);
+                    output.push(bnglToRailroad(expanded, trimmed, null, molSiteDict, showBNGLString));
+                }
+            } else {
             const expanded = expandExpr(expr, molSiteDict);
             output.push(bnglToRailroad(expanded, expr, null, molSiteDict, showBNGLString));
+            }
         }
     }
 
@@ -223,6 +238,7 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
 
             const expandedLHS = expandExpr(reactants_str.replace(/ \+ /g, '.'), molSiteDict);
             const expandedRHS = expandExpr(products_str.replace(/ \+ /g, '.'), molSiteDict);
+            console.log(expandedLHS, arrow, expandedRHS);
 
             if (!expandedLHS.includes('(') || !expandedRHS.includes('(')) {
                 console.warn("⚠️ Skipping malformed reaction:", reactants_str, '->', products_str);

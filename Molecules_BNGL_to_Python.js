@@ -37,6 +37,16 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
 
         const sites = siteBlock.split(',').map(s => s.trim());
 
+        // Build per-molecule-instance map of site name counts
+        const siteNameCounts = {};
+        sites.forEach(s => {
+            const base = s.split('~')[0].split('!')[0].trim();
+            siteNameCounts[base] = (siteNameCounts[base] || 0) + 1;
+        });
+
+        // Initialize tracking of which instance (index) we're on for each site
+        const siteNameIndex = {};
+
         sites.forEach(site => {
             let bondArg = "";
             let bondNumArg = "";
@@ -77,7 +87,13 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
                         }
 
                         if (changesDict) {
-                            const changes = changesDict[`${moleculeInstance}:${siteName}`];
+                            let siteKey = `${moleculeInstance}:${siteName}`;
+                            if (siteNameCounts[siteName] > 1) {
+                                const index = siteNameIndex[siteName] || 0;
+                                siteKey = `${siteKey}[${index}]`;
+                                siteNameIndex[siteName] = index + 1;
+                            }
+                            const changes = changesDict[siteKey];
                             if (changes && changes.change.some(c => [bondAddedNonRev, bondRemovedNonRev, bondAddedRev, bondRemovedRev].includes(c))) {
                                 const bondChange = changes.change.find(c => [bondAddedNonRev, bondRemovedNonRev, bondAddedRev, bondRemovedRev].includes(c));
                                 bondTypeArg = `, bond_type: \"${bondChange}\"`;
@@ -92,7 +108,13 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
                     }
 
                     if (changesDict) {
-                        const changes = changesDict[`${moleculeInstance}:${siteName}`];
+                        let siteKey = `${moleculeInstance}:${siteName}`;
+                        if (siteNameCounts[siteName] > 1) {
+                            const index = siteNameIndex[siteName] || 0;
+                            siteKey = `${siteKey}[${index}]`;
+                            siteNameIndex[siteName] = index + 1;
+                        }
+                        const changes = changesDict[siteKey];
                         if (changes && (changes.change.includes(stateChangeUp) || changes.change.includes(stateChangeDown))) {
                             const direction = changes.change.includes(stateChangeDown) ? "down-arrow" : "up-arrow";
                             const reactantState = changes.reactant.split("~").slice(-1)[0].split("!")[0];
@@ -146,7 +168,13 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
                 }
 
                 if (changesDict) {
-                    const changes = changesDict[`${moleculeInstance}:${siteName}`];
+                    let siteKey = `${moleculeInstance}:${siteName}`;
+                    if (siteNameCounts[siteName] > 1) {
+                        const index = siteNameIndex[siteName] || 0;
+                        siteKey = `${siteKey}[${index}]`;
+                        siteNameIndex[siteName] = index + 1;
+                    }
+                    const changes = changesDict[siteKey];
                     if (changes && changes.change.some(c => [bondAddedNonRev, bondRemovedNonRev, bondAddedRev, bondRemovedRev].includes(c))) {
                         const bondChange = changes.change.find(c => [bondAddedNonRev, bondRemovedNonRev, bondAddedRev, bondRemovedRev].includes(c));
                         bondTypeArg = `, bond_type: \"${bondChange}\"`;

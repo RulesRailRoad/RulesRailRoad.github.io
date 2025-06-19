@@ -1,4 +1,15 @@
+function hasDuplicateSiteNames(sites) {
+        const seen = new Set();
+        for (const s of sites) {
+            const base = s.split('~')[0].split('!')[0];
+            if (seen.has(base)) return true;
+            seen.add(base);
+        }
+        return false;
+    }
+
 function expandExpr(bnglExpr, molSiteDict) {
+
     const chunks = bnglExpr.split('.');
     const expandedChunks = [];
 
@@ -11,28 +22,43 @@ function expandExpr(bnglExpr, molSiteDict) {
             const molName = chunk.slice(0, molEndIdx);
             const inside = chunk.slice(molEndIdx + 1, exprEndIdx);
 
-            const givenSites = {};
-            for (let s of inside.split(',')) {
-                s = s.trim();
-                const sBase = s.split('~')[0].split('!')[0];
-                givenSites[sBase] = s;
-            }
+            const molSites = molSiteDict[molName] || [];
+            const inputSites = inside.split(',').map(s => s.trim()).filter(Boolean);
+            const usePosition = hasDuplicateSiteNames(molSites);
 
-            const sites = molSiteDict[molName] || [];
             const allSites = [];
-            for (let site of sites) {
-                const base = site.split('~')[0].split('!')[0];
-                if (base in givenSites) {
-                    let s = givenSites[base];
-                    if (!s.includes('!')) {
-                        s += '!-';
+            if (usePosition) {
+                for (let i = 0; i < molSites.length; i++) {
+                    let s = inputSites[i];
+                    if (s !== undefined) {
+                        if (!s.includes('!')) s += '!-';
+                        allSites.push(s);
+                    } else {
+                        allSites.push(molSites[i] + '!?');
                     }
-                    allSites.push(s);
-                } else {
-                    allSites.push(site + '!?');
+            }
+            } else {
+                const givenSites = {};
+                for (let s of inside.split(',')) {
+                    s = s.trim();
+                    const sBase = s.split('~')[0].split('!')[0];
+                    givenSites[sBase] = s;
+                }
+
+                const sites = molSiteDict[molName] || [];
+                for (let site of sites) {
+                    const base = site.split('~')[0].split('!')[0];
+                    if (base in givenSites) {
+                        let s = givenSites[base];
+                        if (!s.includes('!')) {
+                            s += '!-';
+                        }
+                        allSites.push(s);
+                    } else {
+                        allSites.push(site + '!?');
+                    }
                 }
             }
-
             const updatedInside = allSites.join(',');
             expandedChunks.push(`${molName}(${updatedInside})`);
 
