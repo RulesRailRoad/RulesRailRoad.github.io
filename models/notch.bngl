@@ -19,6 +19,18 @@ kp1   0.1
 km1   0.1
 end parameters
 
+begin molecules
+Notch(location~ER,DSLbind,Ibind)
+ICN(location~ER,Nbind,CSLbind,MAMLbind)
+OFUT1()   
+Fringe()          
+Furin()
+DSL(Nbind)       
+CSL(Ibind,MAMLbind)  
+MAML(Cbind,Ibind) 
+end molecules
+
+
 begin species    # Species that exist before simulation
 
 # I divide Notch receptor into 2 molecules: Notch and ICN. Both have location attribute and several binding sites.
@@ -32,9 +44,9 @@ Notch(location~ER,DSLbind,Ibind)	   Notch_tot 	# Initial concentration before si
 
 ICN(location~ER,Nbind,CSLbind,MAMLbind)                 ICN_tot 
 
-OFUT1                 OFUT1_tot
-Fringe                Fringe_tot
-Furin                 Furin_tot
+OFUT1()                 OFUT1_tot
+Fringe()                Fringe_tot
+Furin()                 Furin_tot
 DSL(Nbind)            DSL_tot
 
 CSL(Ibind,MAMLbind)      CSL_tot

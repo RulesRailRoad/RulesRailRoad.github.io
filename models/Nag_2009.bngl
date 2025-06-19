@@ -57,6 +57,16 @@ kxgspsr   sigma*kgsp*kxglp/kglp
 kxgsmsr   kgsm
 end parameters
 
+begin molecules
+Lig(l,l)
+Lyn(U,SH2)    
+Syk(tSH2,l~Y~pY,a~Y~pY,s)
+Rec(a,b~Y~pY,g~Y~pY)   
+LAT(s~Y~pY)      
+Grb(SH2,SH3)   
+Sos(g,g)
+end molecules
+
 begin species
 Lig(l,l)      Lig_tot/Fx
 Lyn(U,SH2)      Lyn_tot/Fx
@@ -150,13 +160,13 @@ LAT(s~pY) + Grb(SH2,SH3!1).Sos(g!1,g!2).Grb(SH2!3,SH3!2).LAT(s~pY!3) <-> \
 end reaction rules
 
 begin observables
-#Molecules  RSu_and_LRSu  Rec(a,g~pY!1).Syk(tSH2!1,a~Y,s) Lig(l,l!2).Rec(a!2,g~pY!1).Syk(tSH2!1,a~Y,s)
-#Molecules  RSp_and_LRSp  Rec(a,g~pY!1).Syk(tSH2!1,a~pY,s) Lig(l,l!2).Rec(a!2,g~pY!1).Syk(tSH2!1,a~pY,s)
-#Molecules  R_L_R_Su    Rec(a!3,g).Lig(l!3,l!2).Rec(a!2,g~pY!1).Syk(tSH2!1,a~Y,s)
-#Molecules  R_L_R_Sp    Rec(a!3,g).Lig(l!3,l!2).Rec(a!2,g~pY!1).Syk(tSH2!1,a~pY,s)
-#Molecules  uS_R_L_R_Su   Syk(tSH2!4,a~Y,s).Rec(a!3,g~pY!4).Lig(l!3,l!2).Rec(a!2,g~pY!1).Syk(tSH2!1,a~Y,s)
-#Molecules  pS_R_L_R_Sp   Syk(tSH2!4,a~pY,s).Rec(a!3,g~pY!4).Lig(l!3,l!2).Rec(a!2,g~pY!1).Syk(tSH2!1,a~pY,s)
-#Molecules  uS_R_L_R_Sp   Syk(tSH2!4,a~Y,s).Rec(a!3,g~pY!4).Lig(l!3,l!2).Rec(a!2,g~pY!1).Syk(tSH2!1,a~pY,s)
+Molecules  RSu_and_LRSu  Rec(a,g~pY!1).Syk(tSH2!1,a~Y,s), Lig(l,l!2).Rec(a!2,g~pY!1).Syk(tSH2!1,a~Y,s)
+Molecules  RSp_and_LRSp  Rec(a,g~pY!1).Syk(tSH2!1,a~pY,s), Lig(l,l!2).Rec(a!2,g~pY!1).Syk(tSH2!1,a~pY,s)
+Molecules  R_L_R_Su    Rec(a!3,g).Lig(l!3,l!2).Rec(a!2,g~pY!1).Syk(tSH2!1,a~Y,s)
+Molecules  R_L_R_Sp    Rec(a!3,g).Lig(l!3,l!2).Rec(a!2,g~pY!1).Syk(tSH2!1,a~pY,s)
+Molecules  uS_R_L_R_Su   Syk(tSH2!4,a~Y,s).Rec(a!3,g~pY!4).Lig(l!3,l!2).Rec(a!2,g~pY!1).Syk(tSH2!1,a~Y,s)
+Molecules  pS_R_L_R_Sp   Syk(tSH2!4,a~pY,s).Rec(a!3,g~pY!4).Lig(l!3,l!2).Rec(a!2,g~pY!1).Syk(tSH2!1,a~pY,s)
+Molecules  uS_R_L_R_Sp   Syk(tSH2!4,a~Y,s).Rec(a!3,g~pY!4).Lig(l!3,l!2).Rec(a!2,g~pY!1).Syk(tSH2!1,a~pY,s)
 
 Species   FreeUnLAT   LAT(s~Y)
 Species   BoundUnLAT    LAT(s~Y!+)

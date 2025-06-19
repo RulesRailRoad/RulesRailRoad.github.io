@@ -23,6 +23,12 @@ begin parameters
  11 kmA  0.02
 end parameters
 
+begin molecules
+L(r)
+R(l,d,Y~U~P)
+A(SH2)
+end molecules
+
 begin species
   1  L(r)       L0  # Ligand has one site for binding to receptor. 
                     # L0 is initial concentration

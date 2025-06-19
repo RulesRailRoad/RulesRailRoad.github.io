@@ -13,6 +13,15 @@ kd            0.006
 
 end parameters
 
+begin molecules
+wnt(r)                         
+DSH(f,AxC)                      
+AxC(l,d,b)                      
+frz(w,l,d)                         
+lrp5(l1,l2,l3,l4,l5,f,AD)      
+bcat(a)                       
+end molecules
+
 begin species
 
 wnt(r)                           wnt_tot

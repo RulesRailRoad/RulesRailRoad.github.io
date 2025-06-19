@@ -30,6 +30,12 @@ dM       1
 dC	10
 end parameters
 
+begin molecules
+L(r)
+R(l,r,a)
+A(r,k)
+K(a,Y~U~P)
+end molecules
 
 begin species
 L(r)	         0 # Set to zero for equilibration	

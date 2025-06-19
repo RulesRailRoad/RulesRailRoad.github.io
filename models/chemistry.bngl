@@ -8,6 +8,14 @@ kp 	1
 km	1
 end parameters
 
+begin molecules
+A(e)	           
+B(e)       
+C(e)       
+D(e)       
+E(ac,bd)
+end molecules
+
 begin species
 A(e)	     A_init      
 B(e)       B_init
