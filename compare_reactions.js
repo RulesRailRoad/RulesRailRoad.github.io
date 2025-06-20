@@ -63,7 +63,10 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
 
     // Track indexes of each site name per molecule instance
     const siteInstanceIndex = {};
-
+    if (!allRsites || !allPsites || allRsites.length !== allPsites.length) {
+    console.error("Mismatch or undefined: allRsites and allPsites");
+    return;
+}
     for (let i = 0; i < allRsites.length; i++) {
         const [rmol, rRaw] = allRsites[i];
         const [pmol, pRaw] = allPsites[i];

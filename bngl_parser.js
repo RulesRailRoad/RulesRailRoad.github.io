@@ -116,6 +116,7 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
             const parts = line.split(/\s+/);
             let species = parts.find(p => p.includes('(') && p.includes(')')) || '';
             if (species.includes(':')) species = species.split(':')[1];
+            console.log("Species:", species);
             if (species) output.push(bnglToRailroad(species, null, null, molSiteDict, showBNGLString));
         }
     }
@@ -153,10 +154,12 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
                 expr = expr.split(", ")
                 for (const subExpr of expr) {
                     const trimmed = subExpr.trim();
+                    if (!/\w+\s*\(.*\)/.test(trimmed)) continue;
                     const expanded = expandExpr(trimmed, molSiteDict);
                     output.push(bnglToRailroad(expanded, trimmed, null, molSiteDict, showBNGLString));
                 }
             } else {
+            if (!/\w+\s*\(.*\)/.test(expr)) continue;
             const expanded = expandExpr(expr, molSiteDict);
             output.push(bnglToRailroad(expanded, expr, null, molSiteDict, showBNGLString));
             }
@@ -241,7 +244,7 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
             console.log(expandedLHS, arrow, expandedRHS);
 
             if (!expandedLHS.includes('(') || !expandedRHS.includes('(')) {
-                console.warn("⚠️ Skipping malformed reaction:", reactants_str, '->', products_str);
+                console.warn("⚠️ Skipping malformed reaction:", reactants_str, arrow, products_str);
                 continue;
             }
 
