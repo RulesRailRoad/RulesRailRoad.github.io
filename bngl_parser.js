@@ -207,7 +207,7 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
             let products_str = parts[1].trim();
 
             const stripped_r = [];
-            const reactants = reactants_str.split(' + ');
+            const reactants = reactants_str.split(/(?<!!)\+/);
             for (let part of reactants) {
                 part = part.trim();
                 const endIdx = part.lastIndexOf(")");
@@ -222,7 +222,7 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
             reactants_str = stripped_r.join(' + ');
 
             const stripped_p = [];
-            const products = products_str.split(' + ');
+            const products = products_str.split(/(?<!!)\+/);
             for (let part of products) {
                 part = part.trim();
                 const endIdx = part.lastIndexOf(")");
