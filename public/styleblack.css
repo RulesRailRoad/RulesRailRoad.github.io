@@ -76,3 +76,14 @@ input::file-selector-button {
 #loading-p {
   display: none;
 }
+header {
+
+    background-color: #4CAF50; /* Green background */
+
+    color: white; /* White text */
+
+    text-align: center;
+
+    padding: 20px;
+
+}
