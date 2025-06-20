@@ -7,6 +7,13 @@ body {
   font-family: "Times New Roman", Times, serif;
 }
 
+header {
+    background-color: #4c4faf; /* Blue background */
+    color: white; /* White text */
+    text-align: center;
+    padding: 20px;
+}
+
 p {
   margin: 3px;
 }
@@ -76,14 +83,4 @@ input::file-selector-button {
 #loading-p {
   display: none;
 }
-header {
 
-    background-color: #4CAF50; /* Green background */
-
-    color: white; /* White text */
-
-    text-align: center;
-
-    padding: 20px;
-
-}
