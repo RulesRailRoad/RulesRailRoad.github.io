@@ -13,7 +13,9 @@ header {
     text-align: center;
     padding: 20px;
 }
-
+    h1 {
+      color: white;
+    }
 p {
   margin: 3px;
 }
