@@ -1,38 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>BNGL Visualizer</title>
+    <title>RulesRailRoad: Conventions</title>
     <link rel="stylesheet" type="text/css" href="public/styleblack.css"/>
 </head>
 <body>
-<p><h1>BioNetGenLanguage (BNGL) code visualizer</h1>
-    <h4><a href="https://doi.org/10.1093/bioinformatics/btae351">
-        doi:10.1093/bioinformatics/btae351</a></h4></p>
+    <header>
+
+    <h1 style="color: white;">Rules_Rail_Road - visualizing rule-based models</h1>
+    <h2 style="color: white;">Visualize models in BNGL format</font></h2>
+<center>
 <table cellpadding="20">
  <tr>
      </tr>
     <tr>
-    <td id="canvas-text">
-      <a href=index.html><b>BNGL VISUALIZER</b></a>
+  <td id="canvas-text">
+      <a href=web_visualizer.html style="font-weight:bold;">Visualize BNGL</a>
     </td>   
     <td id="canvas-text">
-      <a href=bngl.html>BNGL overview</a>
+      <a href=bngl.html style="font-weight:bold;">BNGL overview</a>
     </td>
     <td id="canvas-text">
-      <a href=viz.html>Visualization conventions</a>
+      <a href=rr.html style="font-weight:bold;">Rules Railroad Concept</a>
+    </td>   
+    <td id="canvas-text">
+      <a href=viz.html style="font-weight:bold;">Visualizing conventions</a>
+    <td id="canvas-text">
+      <a href=examples.html style="font-weight:bold;">Examples</a>
     </td>
     <td id="canvas-text">
-      <a href=examples.html>Examples</a>
+      <a href=about.html style="font-weight:bold;">About</a>
     </td>
-    <td id="canvas-text">
-      <a href=about.html>About</a>
-    </td>
-  </tr> 
+  </tr>  
 </table>
-    <hr>
+</center>
+</header>
 
     <h2>Visualization conventions</h2>
-
+<ul>
+<li>Compartments are ignored and not visualized</li>
+<li>Reaction rates are ignored and not visualized</li>
+<li>Extra features that are defined through functions are not visualized</li>  
+</ul>
 
   <table cellpadding="10" border="1">
  <tr>
@@ -43,20 +52,6 @@
       <b>bnglViz visualization</b>
     </td>
  </tr>
-<tr>
-       <td id="canvas-text">
-     <code>begin compartments<br>
-        Cyt	3	1<br>
-        EC	3	1<br> 
-        M	2	1    </code><br><br>
-        <small><b>NB:</b> The first number after the compartment name is the dimension, and the next is the size. 
-            So, M is 2D membrane while Cyt and EC are volumetric cytosil and extracellular space. 
-            These definitions are not compatible with cBNGL but used by VCell software only. </small> 
-       </td>
-    <td id="canvas-text">
-      <img src="images/bngl_comp.png" width=200>
-    </td>
-  </tr> 
  <tr>
        <td id="canvas-text">
      <code>begin molecules<br>
