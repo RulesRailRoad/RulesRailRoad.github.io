@@ -144,7 +144,7 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
                 }
                 continue;
             }
-            if (line.includes("==")) continue;
+            if (/([=<>]=?|==)\s*\d+(\.\d+)?/.test(line)) continue;
             const parts = line.split(/\s+/);
 
             let expr = ' ';
@@ -154,6 +154,9 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
                 expr = parts.slice(2).join(' ')
             }
             if (expr.includes(':')) expr = expr.split(':')[1];
+            if (expr.includes('#')) {
+                expr = expr.split('#')[0].trim();
+            }
             if (/\),\s*/.test(expr)) {
                 const exprParts = expr.split(/\),\s*/).map(e => e.trim() + ')').filter(e => e !== ')');
                 for (const subExpr of exprParts) {
