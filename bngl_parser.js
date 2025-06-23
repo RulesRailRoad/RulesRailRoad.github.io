@@ -244,6 +244,11 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
             }
             products_str = stripped_p.join(' + ');
 
+            const mathExprRegex = /\b\w+\s*\*\s*\w+/;
+            if (mathExprRegex.test(products_str)) {
+                products_str = products_str.split(mathExprRegex)[0].trim();
+            }
+
             const expandedLHS = expandExpr(reactants_str.replace(/ \+ /g, '.'), molSiteDict);
             const expandedRHS = expandExpr(products_str.replace(/ \+ /g, '.'), molSiteDict);
 
