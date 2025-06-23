@@ -34,6 +34,9 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
         const moleculeInstance = `${moleculeName} #${moleculeCounter[moleculeName]}`;
 
         diagrams.push(`        new Terminal(\"${moleculeName}\", { box_color: \"${MoleculeColor}\" }),`);
+        if (siteBlock === "") {
+            return; // skip site processing
+        }
 
         const sites = siteBlock.split(',').map(s => s.trim());
 

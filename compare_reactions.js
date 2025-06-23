@@ -27,6 +27,17 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
     const reactantParts = expandedReactants.split(".");
     const productParts = expandedProducts.split(".");
 
+    // Check if the molecule order matches
+    const reactantOrder = reactantParts.map(p => p.trim().split("(")[0]);
+    const productOrder = productParts.map(p => p.trim().split("(")[0]);
+
+    if (reactantOrder.join(",") !== productOrder.join(",")) {
+        console.warn("Molecule order mismatch — skipping reaction:", "reactants:", reactantOrder,
+            "products:", productOrder);
+        return;
+    }
+
+
     const allRsites = [];
     for (const part of reactantParts) {
         const rmol = part.split("(")[0];
@@ -36,9 +47,14 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
         rmolCounter[rmol] = (rmolCounter[rmol] || 0) + 1;
         const molLabel = `${rmol} #${rmolCounter[rmol]}`;
 
+        const rTracker = {};
         for (const site of rsitesParts) {
-            allRsites.push([molLabel, site]);
+            const base = site.split('~')[0].split('!')[0];
+            const index = rTracker[`${molLabel}:${base}`] = (rTracker[`${molLabel}:${base}`] || 0);
+            rTracker[`${molLabel}:${base}`]++;
+            allRsites.push([molLabel, site, base, index]);
         }
+
     }
 
     const allPsites = [];
@@ -50,9 +66,14 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
         pmolCounter[pmol] = (pmolCounter[pmol] || 0) + 1;
         const molLabel = `${pmol} #${pmolCounter[pmol]}`;
 
+        const pTracker = {};
         for (const site of psitesParts) {
-            allPsites.push([molLabel, site]);
+            const base = site.split('~')[0].split('!')[0];
+            const index = pTracker[`${molLabel}:${base}`] = (pTracker[`${molLabel}:${base}`] || 0);
+            pTracker[`${molLabel}:${base}`]++;
+            allPsites.push([molLabel, site, base, index]);
         }
+
     }
 
     // Determine which molecules have repeated site names
@@ -61,15 +82,14 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
         duplicateSiteTrackers[mol] = hasDuplicateSiteNames(molSiteDict[mol] || []);
     }
 
-    // Track indexes of each site name per molecule instance
-    const siteInstanceIndex = {};
     if (!allRsites || !allPsites || allRsites.length !== allPsites.length) {
-    console.error("Mismatch or undefined: allRsites and allPsites");
+    console.error("Skipping reaction comparison due to mismatched reactants and products.", 
+                  "Reactants:", allRsites, "Products:", allPsites);
     return;
 }
     for (let i = 0; i < allRsites.length; i++) {
-        const [rmol, rRaw] = allRsites[i];
-        const [pmol, pRaw] = allPsites[i];
+        const [rmol, rRaw, rsite, rIndex] = allRsites[i];
+        const [pmol, pRaw, psite, pIndex] = allPsites[i];
 
         if (rRaw !== pRaw) {
             let rstate = null, pstate = null;
@@ -135,18 +155,10 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
                 change.push(bindAndStateChange);
             }
 
-            let siteKey = `${rmol}:${rsite}`;
             const molBase = rmol.split(" #")[0];
-
-            if (duplicateSiteTrackers[molBase]) {
-                // Track individual site occurrence by molecule+site name
-                const key = `${rmol}:${rsite}`;
-                if (!(key in siteInstanceIndex)) {
-                    siteInstanceIndex[key] = 0;
-                }
-                const index = siteInstanceIndex[key]++;
-                siteKey = `${key}[${index}]`;
-            }
+            const siteKey = duplicateSiteTrackers[molBase]
+                ? `${rmol}:${rsite}[${rIndex}]`
+                : `${rmol}:${rsite}`;
 
             changesDict[siteKey] = {
                 molecule: rmol,
