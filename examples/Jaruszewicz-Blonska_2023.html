@@ -1,546 +1,191 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>BNGL Visualizer</title>
-    <link rel="stylesheet" type="text/css" href="../public/styleblack.css"/>
-</head>
-<body>
-<p><h1>BioNetGenLanguage (BNGL) code visualizer</h1></p>
-<table cellpadding="30">
- <tr>
-     </tr>
-    <tr>
-    <td id="canvas-text">
-      <a href=../index.html><b>BNGL VISUALIZER</b></a>
-    </td>
-    <td id="canvas-text">
-      <a href=../bngl.html>BNGL overview</a>
-    </td>
-    <td id="canvas-text">
-      <a href=../viz.html>Visualization conventions</a>
-    </td>
-    <td id="canvas-text">
-      <a href=../examples.html>Examples</a>
-    </td>
-    <td id="canvas-text">
-      <a href=../about.html>About</a>
-    </td>
-    <td>
-      <button id="dark-button" onclick="htmlInterface.switchDarkMode();">Toggle Light/Dark Mode</button>
-    </td>
-  </tr>
-</table>
-    <hr>
-    <h3>A plausible identifiable model of the canonical NF-κB signaling pathway
-        (<a href="https://pubmed.ncbi.nlm.nih.gov/37267242/">Jaruszewicz-Blonska et al., 2023</a>)</h3>
 
-<div id="canvas-container"></div>
-<div id="table-container"></div>
-<script src="../public/model-graphics.js"></script>
-<script src="../public/bngl-extractor.js"></script>
-<script src="../public/html-interface.js"></script>
-<script>
-//template bngl text
-const bngl = `
-# This BioNetGen file features the article:
-#
-# -----------------------------------------------------------------------------
-#
-#                "A plausible  identifiable model of the canonical
-#                           NF-kappaB signaling pathway"
-#
-#            by  Jaruszewicz-Blonska J, Kosiuk I,  Prus W,  & Lipniacki T
-#              
-#
-#                           
-#
-# -----------------------------------------------------------------------------
-#
-# For a description of the BioNetGen language (BNGL) see e.g. Faeder et al
-# [Meth. Mol. Biol. (2009), http://dx.doi.org/10.1007/978-1-59745-525-1_5].
-# The model may be executed using BioNetGen [http://www.bionetgen.org].
-# We recommend using BioNetGen within RuleBender [http://www.rulebender.org].
-
-
-
-
-# ----------------- Reaction parameters -----------------------------------------
-
- # FITTED VALUES
-
-begin parameters
-
-k_deg           0.000107
-k_1             0.00195
-k_3             0.00145
-k_2             0.0357
-a_3             0.0946
-delta           0.1083
-epsilon         0.0428
-c_deg           0.000106
-c_4a            0.00313
-a_2             0.0763          
-c_5a            0.0000578
-i_1a            0.000595
-c_3a            0.000372
-
-TR 0  	                                           # TNF on(1)/off(0)
-
-
-
-# PRE-FITTED VALUES
-
-#  k_1                2.5*1e-3            
-#  k_3			      1.5*1e-3
-#  k_deg		      1.25*1e-4
-#  c_deg              1.71429*1e-4
-#  c_3a               4e-4
-#  c_4a               0.003125
-#  c_5a               1e-4
-#  i_1a               1e-3
-#  k_2                0.0025
-#  a_3                0.2
-#  delta		      0.0833333
-#  epsilon	    	  0.01667
-#  a_2		    	  0.04
- 
- 
-
-
-end parameters
-# =============================================================================
-begin molecule types
-IKK(st~n~a)      		              # neutral/active form of IKK kinase
-IkBa()    				              # cytoplasmic, IkB
-IkBa_mRNA()                           # IkBa transcript
-A20()                                 # cytoplasmic A20
-NFkB()     			                  # nuclear NFkB
-end molecule types
-# =============================================================================
-begin seed species
-IKK(st~n)   1   		              # neutral/active form of IKK kinase
-IKK(st~a)   0   			          # neutral/active form of IKK kinase
-IkBa()      0				          # cytoplasmic, IkB
-IkBa_mRNA() 0                         # IkBa transcript
-A20()       0                         # cytoplasmic A20
-NFkB()      0				          # nuclear NFkB
-end seed species
-# =============================================================================
-begin observables
-Species IKK_a 	IKK(st~a)     		   # neutral/active form of IKK kinase
-Species tIkBa 	IkBa_mRNA()            # IkBa transcript
-Species A20     A20()                  # cytoplasmic A20
-Species NFkB_n	NFkB()      		   # nuclear NFkB
-Species IkBa	IkBa()                 # cytoplasmic, IkB
-Species IKK_n 	IKK(st~n)     		   # neutral/active form of IKK kinase
-end observables
-# =============================================================================
-begin functions
-k_NFkBimport() a_3*delta*(1-NFkB_n)/(IkBa+ delta)
-k_NFkBexport() i_1a/(NFkB_n+epsilon)
-k_IkBatransport() a_2+(a_3*(1-NFkB_n))/((IkBa+delta))
-end functions
-# =============================================================================
-begin reaction rules
-# TNFR1 activation and signal transduction cascade
-#
-IKK(st~n)->IKK(st~a)      k_1*TR
-0 -> IKK(st~n)  	      k_deg
-IKK(st~a) -> 0 	          k_deg+k_3
-IKK(st~n) -> 0 	          k_deg
-
-
-# A20 synthesis and degradation, IkB transcription, translation, mRNA and protein degradation
-#
-NFkB() -> NFkB() + A20() 		          c_deg
-A20() -> 0 					              c_deg
-NFkB() -> NFkB() + IkBa_mRNA()            c_3a
-IkBa_mRNA() -> 0 				          c_3a
-IkBa_mRNA() -> IkBa_mRNA() + IkBa()	      c_4a
-IkBa() -> 0 					          c_5a
-
-
-# Protein interactions
-#
-A20() + IKK(st~a) -> A20()   	            k_2*TR
-IKK(st~a) -> IKK(st~a) + NFkB()             k_NFkBimport()
-NFkB() + IkBa() -> 0		                k_NFkBexport()
-IKK(st~a)+IkBa() -> IKK(st~a)               k_IkBatransport()
-end reaction rules
-
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-begin actions
-
-generate_network({overwrite=>1});
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-#
-# 
-# 
-# ########################################################
-# ##### combination experiment for WT cells #############
-# #######################################################
-#
-setParameter("TR",0); 
-
-simulate_ode({suffix=>"continuous",t_end=>30*24*3600,n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1, sparse=>1, steady_state=>1}); 
-
-saveConcentrations()
-
-
-#protocol continuous for WT cells
-
-setParameter("TR",1); 
-
-simulate_ode({suffix=>"continuous",continue=>0, t_start=>0, t_end=>14400, n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1}); 
-setParameter("TR",0); 
-
-resetConcentrations()
-
-
-
-#protocol pulses 5_60 for WT cells
-
-
-setParameter("TR",1); 
-simulate_ode({suffix=>"pulse5_60min",continue=>0,t_end=>5*60,n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 1. puls 5min
-
-setParameter("TR",0); 
-simulate_ode({suffix=>"pulse5_60min",continue=>1,t_end=>60*60,  n_steps=>200, atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 55min break
-
-setParameter("TR",1); 
-simulate_ode({suffix=>"pulse5_60min",continue=>1,t_end=>65*60,n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 2. puls 5min
-
-setParameter("TR",0); 
-simulate_ode({suffix=>"pulse5_60min",continue=>1,t_end=>120*60,n_steps=>200, atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 55min break
-
-setParameter("TR",1); 
-simulate_ode({suffix=>"pulse5_60min",continue=>1,t_end=>125*60,n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 3. puls 5min
-
-setParameter("TR",0); 
-simulate_ode({suffix=>"pulse5_60min",continue=>1,t_end=>43200,n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 55min break
-
-resetConcentrations()
- 
-
-# protocol pulses 5min-100min for WT cells
-
-setParameter("TR",1); 
-simulate_ode({suffix=>"pulse5_100min",continue=>0,t_end=>5*60,n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 1. puls 5min
-
-
-setParameter("TR",0); 
-simulate_ode({suffix=>"pulse5_100min",continue=>1,t_start=>5*60,t_end=>90*60, n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 85min break
-simulate_ode({suffix=>"pulse5_100min",continue=>1,t_end=>100*60, n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # +10min break
-
-
-setParameter("TR",1); 
-simulate_ode({suffix=>"pulse5_100min",continue=>1,t_end=>105*60,n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 2. puls 5min
-
-setParameter("TR",0); 
-simulate_ode({suffix=>"pulse5_100min",continue=>1,t_end=>190*60,n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 85min break
-simulate_ode({suffix=>"pulse5_100min",continue=>1,t_end=>200*60,n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 10min break
-
-
-setParameter("TR",1); 
-simulate_ode({suffix=>"pulse5_100min",continue=>1,t_end=>205*60,n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 3. puls 5min
-
-setParameter("TR",0); 
-simulate_ode({suffix=>"pulse5_100min",continue=>1,t_end=>43200,n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1});
-
-resetConcentrations()
-# 
-# 
-# 
-# 
-# # protocol pulses 5min-200min for WT cells
-
-
-setParameter("TR",1); 
-simulate_ode({suffix=>"pulse5_200min",continue=>0,t_end=>5*60,n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 1. puls 5min
-
-setParameter("TR",0); 
-simulate_ode({suffix=>"pulse5_200min",continue=>1,t_end=>200*60, n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); 
-
-setParameter("TR",1); 
-simulate_ode({suffix=>"pulse5_200min",continue=>1,t_end=>205*60,n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 2. puls 5min
-
-setParameter("TR",0); 
-simulate_ode({suffix=>"pulse5_200min",continue=>1,t_end=>400*60,n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); 
-
-setParameter("TR",1); 
-simulate_ode({suffix=>"pulse5_200min",continue=>1,t_end=>405*60,n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 3. puls 5min
-
-setParameter("TR",0); 
-simulate_ode({suffix=>"pulse5_200min",continue=>1,t_end=>43200,n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); 
-
-
-resetConcentrations()
-# 
-# 
-# # protocol pulses 22.5min-45min for WT cells
-
-setParameter("TR",1); 
-#
-simulate_ode({suffix=>"pulse22_5min",continue=>0,t_end=>22.5*60,n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 1. puls 15min
-
-setParameter("TR",0); 
-simulate_ode({suffix=>"pulse22_5min",continue=>1,t_end=>30*60, n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # [1800] 7.5min break
-simulate_ode({suffix=>"pulse22_5min",continue=>1,t_end=>45*60, n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # do 2700s 15min break
-
-setParameter("TR",1); 
-simulate_ode({suffix=>"pulse22_5min",continue=>1,t_end=>45*60+22.5*60, n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 2. puls 15min
-
-setParameter("TR",0); 
-simulate_ode({suffix=>"pulse22_5min",continue=>1,t_end=>75*60,n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # [45*60+1800=4500] 7.5min break
-simulate_ode({suffix=>"pulse22_5min",continue=>1,t_end=>90*60, n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # till 45*60+2700s 15min break
-
-setParameter("TR",1); 
-simulate_ode({suffix=>"pulse22_5min",continue=>1,t_end=>90*60+22.5*60, n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 2. puls 15min
-
-
-setParameter("TR",0); 
-simulate_ode({suffix=>"pulse22_5min",continue=>1,t_end=>43200,n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 2h
-
-
-resetConcentrations()
-# 
-# 
-# 
-# # protocol pulses 45-90min for WT cells
-# 
-#
-setParameter("TR",1); 
-#
-simulate_ode({suffix=>"pulse45min",continue=>0,t_end=>45*60, n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 1. pulse 30min
-
-setParameter("TR",0); 
-
-simulate_ode({suffix=>"pulse45min",continue=>1,t_end=>60*60, n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # [3600] 15min break
-simulate_ode({suffix=>"pulse45min",continue=>1,t_end=>90*60, n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # [5400] 30min break
-
-setParameter("TR",1); 
-simulate_ode({suffix=>"pulse45min",continue=>1,t_end=>90*60+45*60, n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 2. pulse 30min
-
-
-setParameter("TR",0); 
-simulate_ode({suffix=>"pulse45min",continue=>1,t_end=>150*60,n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # [150*60=9000] 15min break
-simulate_ode({suffix=>"pulse45min",continue=>1,t_end=>180*60, n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # [10800]  30min break
-
-setParameter("TR",1); 
-simulate_ode({suffix=>"pulse45min",continue=>1,t_end=>180*60+45*60, n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 3. pulse 15min
-
-setParameter("TR",0); 
-simulate_ode({suffix=>"pulse45min",continue=>1,t_end=>43200,n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1}); 
-
-
-
-
-
-#######################################################
-###### combination experiment for A20 KO cells ########
-####################################################### 
- 
-resetConcentrations()
-setConcentration("A20()",0)
-
-
-
-simulate_ode({suffix=>"continuous_A20KO",continue=>0, t_start=>0, t_end=>3600,n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1, steady_state=>1}); 
-
-saveConcentrations("A20_KO")
-
-
-#protocol continuous for A20KO cells
-setConcentration("A20()",0)
-setParameter("c_deg",0);
-setParameter("TR",1); 
-simulate_ode({suffix=>"continuous_A20KO",continue=>0, t_start=>0, t_end=>14400,n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1}); 
-
-setParameter("TR",0); 
-
-resetConcentrations("A20_KO")
-
-
-
-
-#protocol pulses 5-60 for A20KO cells
-setConcentration("A20()",0)
-setParameter("TR",1); 
-simulate_ode({suffix=>"pulse5_60min_A20KO",continue=>0,t_end=>5*60,n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 1. puls 5min
-
-setConcentration("A20()",0)
-setParameter("TR",0); 
-simulate_ode({suffix=>"pulse5_60min_A20KO",continue=>1,t_end=>60*60, n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 55min break
-
-setConcentration("A20()",0)
-setParameter("TR",1); 
-simulate_ode({suffix=>"pulse5_60min_A20KO",continue=>1,t_end=>65*60,n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 2. puls 5min
-
-setConcentration("A20()",0)
-setParameter("TR",0); 
-simulate_ode({suffix=>"pulse5_60min_A20KO",continue=>1,t_end=>120*60,n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 55min break
-
-setConcentration("A20()",0)
-setParameter("TR",1); 
-simulate_ode({suffix=>"pulse5_60min_A20KO",continue=>1,t_end=>125*60,n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 3. puls 5min
-
-setConcentration("A20()",0)
-setParameter("TR",0); 
-simulate_ode({suffix=>"pulse5_60min_A20KO",continue=>1,t_end=>43200,n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 55min przerwy
-
-
-resetConcentrations("A20_KO")
-# 
-# 
-# 
-# #protocol pulses 5-100 for A20KO cells
-# 
-setConcentration("A20()",0)
-setParameter("TR",1); 
-simulate_ode({suffix=>"pulse5_100min_A20KO",continue=>0,t_end=>5*60,n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 1. pulse 5min
-
-setConcentration("A20()",0)
-setParameter("TR",0); 
-simulate_ode({suffix=>"pulse5_100min_A20KO",continue=>1,t_start=>5*60,t_end=>90*60,n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 85min break
-simulate_ode({suffix=>"pulse5_100min_A20KO",continue=>1,t_end=>100*60, n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # +10min break
-
-setConcentration("A20()",0)
-setParameter("TR",1); 
-simulate_ode({suffix=>"pulse5_100min_A20KO",continue=>1,t_end=>105*60,n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 2. pulse 5min
-
-setConcentration("A20()",0)
-setParameter("TR",0); 
-simulate_ode({suffix=>"pulse5_100min_A20KO",continue=>1,t_end=>190*60,n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 85min break
-simulate_ode({suffix=>"pulse5_100min_A20KO",continue=>1,t_end=>200*60,n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 10min break
-
-setConcentration("A20()",0)
-setParameter("TR",1); 
-simulate_ode({suffix=>"pulse5_100min_A20KO",continue=>1,t_end=>205*60,n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 3. pulse 5min
-
-setConcentration("A20()",0)
-setParameter("TR",0); 
-simulate_ode({suffix=>"pulse5_100min_A20KO",continue=>1,t_end=>43200,n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1}); 
-
-resetConcentrations("A20_KO")
-# 
-# 
-# 
-# 
-# #protocol pulses 5-200 for A20KO cells
-setConcentration("A20()",0)
-setParameter("TR",1); 
-simulate_ode({suffix=>"pulse5_200min_A20KO",continue=>0,t_end=>5*60,n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 1. pulse 5min
-
-setConcentration("A20()",0)
-setParameter("TR",0); 
-simulate_ode({suffix=>"pulse5_200min_A20KO",continue=>1,t_end=>200*60,n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); 
-
-setConcentration("A20()",0)
-setParameter("TR",1); 
-simulate_ode({suffix=>"pulse5_200min_A20KO",continue=>1,t_end=>205*60,n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 2. puls 5min
-
-setConcentration("A20()",0)
-setParameter("TR",0); 
-simulate_ode({suffix=>"pulse5_200min_A20KO",continue=>1,t_end=>400*60,n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); 
-
-setConcentration("A20()",0)
-setParameter("TR",1); 
-simulate_ode({suffix=>"pulse5_200min_A20KO",continue=>1,t_end=>405*60,n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 3. puls 5min
-
-setConcentration("A20()",0)
-setParameter("TR",0); 
-simulate_ode({suffix=>"pulse5_200min_A20KO",continue=>1,t_end=>43200,n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); 
-
-resetConcentrations("A20_KO")
-
-
-
-#protocol pulses 22.5-45 for A20KO cells
-setConcentration("A20()",0)
-setParameter("TR",1); 
-simulate_ode({suffix=>"pulse22_5min_A20KO",continue=>0,t_end=>22.5*60, n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 1. puls 
-
-setConcentration("A20()",0)
-setParameter("TR",0); 
-simulate_ode({suffix=>"pulse22_5min_A20KO",continue=>1,t_end=>30*60, n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # [1800] 7.5min break
-simulate_ode({suffix=>"pulse22_5min_A20KO",continue=>1,t_end=>45*60, n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # do 2700s 15min break
-
-setConcentration("A20()",0)
-setParameter("TR",1); 
-simulate_ode({suffix=>"pulse22_5min_A20KO",continue=>1,t_end=>45*60+22.5*60, n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 2. pulse
-
-setConcentration("A20()",0)
-setParameter("TR",0); 
-simulate_ode({suffix=>"pulse22_5min_A20KO",continue=>1,t_end=>75*60,n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); 
-simulate_ode({suffix=>"pulse22_5min_A20KO",continue=>1,t_end=>90*60, n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); 
-
-setConcentration("A20()",0)
-setParameter("TR",1); 
-simulate_ode({suffix=>"pulse22_5min_A20KO",continue=>1,t_end=>90*60+22.5*60, n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 3. puls 
-
-setConcentration("A20()",0)
-setParameter("TR",0); 
-simulate_ode({suffix=>"pulse22_5min_A20KO",continue=>1,t_end=>43200,n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 2h
-
-resetConcentrations("A20_KO")
-# 
-# 
-# protocol pulses 45-90 for A20KO cells 
-# 
-setConcentration("A20()",0) 
-setParameter("TR",1); 
-simulate_ode({suffix=>"pulse45min_A20KO",continue=>0,t_end=>45*60, n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 1. puls 
-
-setConcentration("A20()",0)
-setParameter("TR",0); 
-simulate_ode({suffix=>"pulse45min_A20KO",continue=>1,t_end=>60*60, n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); 
-simulate_ode({suffix=>"pulse45min_A20KO",continue=>1,t_end=>90*60, n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); 
-
-setConcentration("A20()",0)
-setParameter("TR",1); 
-simulate_ode({suffix=>"pulse45min_A20KO",continue=>1,t_end=>90*60+45*60, n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 2. pulse
-
-setConcentration("A20()",0)
-setParameter("TR",0); 
-simulate_ode({suffix=>"pulse45min_A20KO",continue=>1,t_end=>150*60,n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); 
-simulate_ode({suffix=>"pulse45min_A20KO",continue=>1,t_end=>180*60, n_steps=>1,atol=>1e-16,rtol=>1e-16, sparse=>1}); 
-
-setConcentration("A20()",0)
-setParameter("TR",1); 
-simulate_ode({suffix=>"pulse45min_A20KO",continue=>1,t_end=>180*60+45*60, n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1}); # 3. pulse 
-
-setConcentration("A20()",0)
-setParameter("TR",0); 
-simulate_ode({suffix=>"pulse45min_A20KO",continue=>1,t_end=>43200,n_steps=>200,atol=>1e-16,rtol=>1e-16, sparse=>1}); 
-
-
-end actions
-
-`;
-//get major elements
-const canvContain = document.getElementById("canvas-container");
-const tableContain = document.getElementById("table-container");
-const fileInput = document.getElementById("bngl-file-input");
-const body = document.body;
-
-//connect interface
-var htmlInterface = new HTMLInterface(body, canvContain, tableContain, fileInput);
-
-//templating then bngl file
-var blob = new Blob([bngl], {type: "text/plain"});
-let reader = new FileReader();
-reader.onload = () => {htmlInterface.visualize(reader.result);};
-reader.readAsText(blob);
-
-//function to reset input element value when it is clicked
-//this is needed because chrome doesn't trigger onchange if filename is same
-function inputClick() {
-  fileInput.value = "";
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="UTF-8">
+        <title>Saved BNGL Diagrams</title>
+        <style>
+
+svg.railroad-diagram {
+    background-color: hsl(0, 100%, 100%);
 }
-</script>
-</body>
-</html>
+svg.railroad-diagram path {
+    stroke-width: 3;
+    stroke: black;
+    fill: rgba(0, 0, 0, 0);
+}
+svg.railroad-diagram text {
+    font: bold 14px monospace;
+    text-anchor: middle;
+}
+svg.railroad-diagram text.label {
+    text-anchor: start;
+}
+svg.railroad-diagram text.comment {
+    font: italic 12px monospace;
+}
+svg.railroad-diagram rect {
+    stroke-width: 3;
+    stroke: black;
+    fill: hsl(120, 100%, 90%);
+}
+svg.railroad-diagram rect.group-box {
+    stroke: gray;
+    stroke-dasharray: 10 5;
+    fill: none;
+}
+
+.red { fill: red; }
+.green { fill: green; }
+.yellow { fill: yellow; }
+.blue { fill: blue; }
+.lightblue { fill: lightblue; }
+.skyblue { fill: skyblue; }
+.lightgreen { fill: lightgreen; }
+.orange { fill: orange; }
+.pink { fill: pink; }
+.violet { fill: violet; }
+.coral { fill: coral; }
+.lightsalmon { fill: lightsalmon; }
+.plum { fill: plum; }
+.turquoise { fill: turquoise; }
+
+.railroad-diagram .up-triangle polygon,
+.railroad-diagram .down-triangle polygon,
+.railroad-diagram .diamond polygon {
+    stroke-width: 3;
+    stroke: black;
+    fill: white;
+}
+
+svg.railroad-diagram path.right-bind,
+svg.railroad-diagram g.terminal path.right-bind,
+svg.railroad-diagram g.nonterminal path.right-bind {
+    stroke: black;
+    stroke-width: 3;
+    fill: rgba(0, 0, 0, 0);
+}
+
+
+            h2 {
+            font-size: 1.8em;
+            margin-top: 2em;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 0.3em;
+            }
+            small {
+            margin-top: 2em;
+            font-size: 0.9em;
+            }
+            </style>
+        </head>
+        <body>
+        <h2>Molecules</h2><div class="diagram-block"><h3>IKK(st~n~a)</h3><div><svg class="railroad-diagram" height="177" viewBox="0 0 310.5 177" width="310.5">
+<g transform="translate(.5 .5)">
+<g>
+<path d="M20 21v20m10 -20v20m-10 -10h20"></path></g><path d="M40 31h10"></path><g class="terminal ">
+<path d="M50 31h0"></path><path d="M95.5 31h0"></path><rect height="22" rx="10" ry="10" style="fill: lightgreen" width="45.5" x="50" y="20"></rect><text x="72.75" y="35">IKK</text></g><path d="M95.5 31h10"></path><g>
+<path d="M105.5 31h0"></path><path d="M270.5 31h0"></path><path d="M105.5 31a10 10 0 0 1 10 10v7a10 10 0 0 0 10 10"></path><g>
+<path d="M125.5 58h0"></path><path d="M250.5 58h0"></path><g class="terminal ">
+<path d="M125.5 58h0"></path><path d="M162.5 58h0"></path><rect height="22" rx="10" ry="10" style="fill: lightblue" width="37" x="125.5" y="47"></rect><text x="144" y="62">st</text></g><path d="M162.5 58h10"></path><g>
+<path d="M172.5 58h0"></path><path d="M250.5 58h0"></path><path d="M172.5 58a10 10 0 0 1 10 10v7a10 10 0 0 0 10 10"></path><g class="non-terminal ">
+<path d="M192.5 85h4.75"></path><path d="M225.75 85h4.75"></path><rect height="22" style="fill: khaki" width="28.5" x="197.25" y="74"></rect><text x="211.5" y="89">n</text></g><path d="M230.5 85a10 10 0 0 0 10 -10v-7a10 10 0 0 1 10 -10"></path><path d="M172.5 58a10 10 0 0 1 10 10v37a10 10 0 0 0 10 10"></path><g class="non-terminal ">
+<path d="M192.5 115h4.75"></path><path d="M225.75 115h4.75"></path><rect height="22" style="fill: khaki" width="28.5" x="197.25" y="104"></rect><text x="211.5" y="119">a</text></g><path d="M230.5 115a10 10 0 0 0 10 -10v-37a10 10 0 0 1 10 -10"></path></g></g><path d="M250.5 58a10 10 0 0 0 10 -10v-7a10 10 0 0 1 10 -10"></path></g><path d="M 270.5 31 h 20 m -10 -10 v 20 m 10 -20 v 20"></path></g></svg></div></div><div class="diagram-block"><h3>IkBa()</h3><div><svg class="railroad-diagram" height="93" viewBox="0 0 154 93" width="154">
+<g transform="translate(.5 .5)">
+<g>
+<path d="M20 21v20m10 -20v20m-10 -10h20"></path></g><path d="M40 31h10"></path><g class="terminal ">
+<path d="M50 31h0"></path><path d="M104 31h0"></path><rect height="22" rx="10" ry="10" style="fill: lightgreen" width="54" x="50" y="20"></rect><text x="77" y="35">IkBa</text></g><path d="M104 31h10"></path><path d="M 114 31 h 20 m -10 -10 v 20 m 10 -20 v 20"></path></g></svg></div></div><div class="diagram-block"><h3>IkBa_mRNA()</h3><div><svg class="railroad-diagram" height="93" viewBox="0 0 196.5 93" width="196.5">
+<g transform="translate(.5 .5)">
+<g>
+<path d="M20 21v20m10 -20v20m-10 -10h20"></path></g><path d="M40 31h10"></path><g class="terminal ">
+<path d="M50 31h0"></path><path d="M146.5 31h0"></path><rect height="22" rx="10" ry="10" style="fill: lightgreen" width="96.5" x="50" y="20"></rect><text x="98.25" y="35">IkBa_mRNA</text></g><path d="M146.5 31h10"></path><path d="M 156.5 31 h 20 m -10 -10 v 20 m 10 -20 v 20"></path></g></svg></div></div><div class="diagram-block"><h3>A20()</h3><div><svg class="railroad-diagram" height="93" viewBox="0 0 145.5 93" width="145.5">
+<g transform="translate(.5 .5)">
+<g>
+<path d="M20 21v20m10 -20v20m-10 -10h20"></path></g><path d="M40 31h10"></path><g class="terminal ">
+<path d="M50 31h0"></path><path d="M95.5 31h0"></path><rect height="22" rx="10" ry="10" style="fill: lightgreen" width="45.5" x="50" y="20"></rect><text x="72.75" y="35">A20</text></g><path d="M95.5 31h10"></path><path d="M 105.5 31 h 20 m -10 -10 v 20 m 10 -20 v 20"></path></g></svg></div></div><div class="diagram-block"><h3>NFkB()</h3><div><svg class="railroad-diagram" height="93" viewBox="0 0 154 93" width="154">
+<g transform="translate(.5 .5)">
+<g>
+<path d="M20 21v20m10 -20v20m-10 -10h20"></path></g><path d="M40 31h10"></path><g class="terminal ">
+<path d="M50 31h0"></path><path d="M104 31h0"></path><rect height="22" rx="10" ry="10" style="fill: lightgreen" width="54" x="50" y="20"></rect><text x="77" y="35">NFkB</text></g><path d="M104 31h10"></path><path d="M 114 31 h 20 m -10 -10 v 20 m 10 -20 v 20"></path></g></svg></div></div><h2>Species</h2><div class="diagram-block"><h3>IKK(st~n)</h3><div><svg class="railroad-diagram" height="147" viewBox="0 0 310.5 147" width="310.5">
+<g transform="translate(.5 .5)">
+<g>
+<path d="M20 21v20m10 -20v20m-10 -10h20"></path></g><path d="M40 31h10"></path><g class="terminal ">
+<path d="M50 31h0"></path><path d="M95.5 31h0"></path><rect height="22" rx="10" ry="10" style="fill: lightgreen" width="45.5" x="50" y="20"></rect><text x="72.75" y="35">IKK</text></g><path d="M95.5 31h10"></path><g>
+<path d="M105.5 31h0"></path><path d="M270.5 31h0"></path><path d="M105.5 31a10 10 0 0 1 10 10v7a10 10 0 0 0 10 10"></path><g>
+<path d="M125.5 58h0"></path><path d="M250.5 58h0"></path><g class="terminal ">
+<path d="M125.5 58h0"></path><path d="M162.5 58h0"></path><rect height="22" rx="10" ry="10" style="fill: lightblue" width="37" x="125.5" y="47"></rect><text x="144" y="62">st</text></g><path d="M162.5 58h10"></path><g>
+<path d="M172.5 58h0"></path><path d="M250.5 58h0"></path><path d="M172.5 58a10 10 0 0 1 10 10v7a10 10 0 0 0 10 10"></path><g class="non-terminal ">
+<path d="M192.5 85h4.75"></path><path d="M225.75 85h4.75"></path><rect height="22" style="fill: khaki" width="28.5" x="197.25" y="74"></rect><text x="211.5" y="89">n</text></g><path d="M230.5 85a10 10 0 0 0 10 -10v-7a10 10 0 0 1 10 -10"></path></g></g><path d="M250.5 58a10 10 0 0 0 10 -10v-7a10 10 0 0 1 10 -10"></path></g><path d="M 270.5 31 h 20 m -10 -10 v 20 m 10 -20 v 20"></path></g></svg></div></div><div class="diagram-block"><h3>IKK(st~a)</h3><div><svg class="railroad-diagram" height="147" viewBox="0 0 310.5 147" width="310.5">
+<g transform="translate(.5 .5)">
+<g>
+<path d="M20 21v20m10 -20v20m-10 -10h20"></path></g><path d="M40 31h10"></path><g class="terminal ">
+<path d="M50 31h0"></path><path d="M95.5 31h0"></path><rect height="22" rx="10" ry="10" style="fill: lightgreen" width="45.5" x="50" y="20"></rect><text x="72.75" y="35">IKK</text></g><path d="M95.5 31h10"></path><g>
+<path d="M105.5 31h0"></path><path d="M270.5 31h0"></path><path d="M105.5 31a10 10 0 0 1 10 10v7a10 10 0 0 0 10 10"></path><g>
+<path d="M125.5 58h0"></path><path d="M250.5 58h0"></path><g class="terminal ">
+<path d="M125.5 58h0"></path><path d="M162.5 58h0"></path><rect height="22" rx="10" ry="10" style="fill: lightblue" width="37" x="125.5" y="47"></rect><text x="144" y="62">st</text></g><path d="M162.5 58h10"></path><g>
+<path d="M172.5 58h0"></path><path d="M250.5 58h0"></path><path d="M172.5 58a10 10 0 0 1 10 10v7a10 10 0 0 0 10 10"></path><g class="non-terminal ">
+<path d="M192.5 85h4.75"></path><path d="M225.75 85h4.75"></path><rect height="22" style="fill: khaki" width="28.5" x="197.25" y="74"></rect><text x="211.5" y="89">a</text></g><path d="M230.5 85a10 10 0 0 0 10 -10v-7a10 10 0 0 1 10 -10"></path></g></g><path d="M250.5 58a10 10 0 0 0 10 -10v-7a10 10 0 0 1 10 -10"></path></g><path d="M 270.5 31 h 20 m -10 -10 v 20 m 10 -20 v 20"></path></g></svg></div></div><div class="diagram-block"><h3>IkBa()</h3><div><svg class="railroad-diagram" height="93" viewBox="0 0 154 93" width="154">
+<g transform="translate(.5 .5)">
+<g>
+<path d="M20 21v20m10 -20v20m-10 -10h20"></path></g><path d="M40 31h10"></path><g class="terminal ">
+<path d="M50 31h0"></path><path d="M104 31h0"></path><rect height="22" rx="10" ry="10" style="fill: lightgreen" width="54" x="50" y="20"></rect><text x="77" y="35">IkBa</text></g><path d="M104 31h10"></path><path d="M 114 31 h 20 m -10 -10 v 20 m 10 -20 v 20"></path></g></svg></div></div><div class="diagram-block"><h3>IkBa_mRNA()</h3><div><svg class="railroad-diagram" height="93" viewBox="0 0 196.5 93" width="196.5">
+<g transform="translate(.5 .5)">
+<g>
+<path d="M20 21v20m10 -20v20m-10 -10h20"></path></g><path d="M40 31h10"></path><g class="terminal ">
+<path d="M50 31h0"></path><path d="M146.5 31h0"></path><rect height="22" rx="10" ry="10" style="fill: lightgreen" width="96.5" x="50" y="20"></rect><text x="98.25" y="35">IkBa_mRNA</text></g><path d="M146.5 31h10"></path><path d="M 156.5 31 h 20 m -10 -10 v 20 m 10 -20 v 20"></path></g></svg></div></div><div class="diagram-block"><h3>A20()</h3><div><svg class="railroad-diagram" height="93" viewBox="0 0 145.5 93" width="145.5">
+<g transform="translate(.5 .5)">
+<g>
+<path d="M20 21v20m10 -20v20m-10 -10h20"></path></g><path d="M40 31h10"></path><g class="terminal ">
+<path d="M50 31h0"></path><path d="M95.5 31h0"></path><rect height="22" rx="10" ry="10" style="fill: lightgreen" width="45.5" x="50" y="20"></rect><text x="72.75" y="35">A20</text></g><path d="M95.5 31h10"></path><path d="M 105.5 31 h 20 m -10 -10 v 20 m 10 -20 v 20"></path></g></svg></div></div><div class="diagram-block"><h3>NFkB()</h3><div><svg class="railroad-diagram" height="93" viewBox="0 0 154 93" width="154">
+<g transform="translate(.5 .5)">
+<g>
+<path d="M20 21v20m10 -20v20m-10 -10h20"></path></g><path d="M40 31h10"></path><g class="terminal ">
+<path d="M50 31h0"></path><path d="M104 31h0"></path><rect height="22" rx="10" ry="10" style="fill: lightgreen" width="54" x="50" y="20"></rect><text x="77" y="35">NFkB</text></g><path d="M104 31h10"></path><path d="M 114 31 h 20 m -10 -10 v 20 m 10 -20 v 20"></path></g></svg></div></div><h2>Observables</h2><div class="diagram-block"><h3>IKK(st~a) # neutral/active form of IKK kinase</h3><div><svg class="railroad-diagram" height="147" viewBox="0 0 310.5 147" width="310.5">
+<g transform="translate(.5 .5)">
+<g>
+<path d="M20 21v20m10 -20v20m-10 -10h20"></path></g><path d="M40 31h10"></path><g class="terminal ">
+<path d="M50 31h0"></path><path d="M95.5 31h0"></path><rect height="22" rx="10" ry="10" style="fill: lightgreen" width="45.5" x="50" y="20"></rect><text x="72.75" y="35">IKK</text></g><path d="M95.5 31h10"></path><g>
+<path d="M105.5 31h0"></path><path d="M270.5 31h0"></path><path d="M105.5 31a10 10 0 0 1 10 10v7a10 10 0 0 0 10 10"></path><g>
+<path d="M125.5 58h0"></path><path d="M250.5 58h0"></path><g class="terminal ">
+<path d="M125.5 58h0"></path><path d="M162.5 58h0"></path><rect height="22" rx="10" ry="10" style="fill: lightblue" width="37" x="125.5" y="47"></rect><text x="144" y="62">st</text></g><path d="M162.5 58h10"></path><g>
+<path d="M172.5 58h0"></path><path d="M250.5 58h0"></path><path d="M172.5 58a10 10 0 0 1 10 10v7a10 10 0 0 0 10 10"></path><g class="non-terminal ">
+<path d="M192.5 85h4.75"></path><path d="M225.75 85h4.75"></path><rect height="22" style="fill: khaki" width="28.5" x="197.25" y="74"></rect><text x="211.5" y="89">a</text></g><path d="M230.5 85a10 10 0 0 0 10 -10v-7a10 10 0 0 1 10 -10"></path></g></g><path d="M250.5 58a10 10 0 0 0 10 -10v-7a10 10 0 0 1 10 -10"></path></g><path d="M 270.5 31 h 20 m -10 -10 v 20 m 10 -20 v 20"></path></g></svg></div></div><div class="diagram-block"><h3>IkBa_mRNA() # IkBa transcript</h3><div><svg class="railroad-diagram" height="93" viewBox="0 0 196.5 93" width="196.5">
+<g transform="translate(.5 .5)">
+<g>
+<path d="M20 21v20m10 -20v20m-10 -10h20"></path></g><path d="M40 31h10"></path><g class="terminal ">
+<path d="M50 31h0"></path><path d="M146.5 31h0"></path><rect height="22" rx="10" ry="10" style="fill: lightgreen" width="96.5" x="50" y="20"></rect><text x="98.25" y="35">IkBa_mRNA</text></g><path d="M146.5 31h10"></path><path d="M 156.5 31 h 20 m -10 -10 v 20 m 10 -20 v 20"></path></g></svg></div></div><div class="diagram-block"><h3>A20() # cytoplasmic A20</h3><div><svg class="railroad-diagram" height="93" viewBox="0 0 145.5 93" width="145.5">
+<g transform="translate(.5 .5)">
+<g>
+<path d="M20 21v20m10 -20v20m-10 -10h20"></path></g><path d="M40 31h10"></path><g class="terminal ">
+<path d="M50 31h0"></path><path d="M95.5 31h0"></path><rect height="22" rx="10" ry="10" style="fill: lightgreen" width="45.5" x="50" y="20"></rect><text x="72.75" y="35">A20</text></g><path d="M95.5 31h10"></path><path d="M 105.5 31 h 20 m -10 -10 v 20 m 10 -20 v 20"></path></g></svg></div></div><div class="diagram-block"><h3>NFkB() # nuclear NFkB</h3><div><svg class="railroad-diagram" height="93" viewBox="0 0 154 93" width="154">
+<g transform="translate(.5 .5)">
+<g>
+<path d="M20 21v20m10 -20v20m-10 -10h20"></path></g><path d="M40 31h10"></path><g class="terminal ">
+<path d="M50 31h0"></path><path d="M104 31h0"></path><rect height="22" rx="10" ry="10" style="fill: lightgreen" width="54" x="50" y="20"></rect><text x="77" y="35">NFkB</text></g><path d="M104 31h10"></path><path d="M 114 31 h 20 m -10 -10 v 20 m 10 -20 v 20"></path></g></svg></div></div><div class="diagram-block"><h3>IkBa() # cytoplasmic, IkB</h3><div><svg class="railroad-diagram" height="93" viewBox="0 0 154 93" width="154">
+<g transform="translate(.5 .5)">
+<g>
+<path d="M20 21v20m10 -20v20m-10 -10h20"></path></g><path d="M40 31h10"></path><g class="terminal ">
+<path d="M50 31h0"></path><path d="M104 31h0"></path><rect height="22" rx="10" ry="10" style="fill: lightgreen" width="54" x="50" y="20"></rect><text x="77" y="35">IkBa</text></g><path d="M104 31h10"></path><path d="M 114 31 h 20 m -10 -10 v 20 m 10 -20 v 20"></path></g></svg></div></div><div class="diagram-block"><h3>IKK(st~n) # neutral/active form of IKK kinase</h3><div><svg class="railroad-diagram" height="147" viewBox="0 0 310.5 147" width="310.5">
+<g transform="translate(.5 .5)">
+<g>
+<path d="M20 21v20m10 -20v20m-10 -10h20"></path></g><path d="M40 31h10"></path><g class="terminal ">
+<path d="M50 31h0"></path><path d="M95.5 31h0"></path><rect height="22" rx="10" ry="10" style="fill: lightgreen" width="45.5" x="50" y="20"></rect><text x="72.75" y="35">IKK</text></g><path d="M95.5 31h10"></path><g>
+<path d="M105.5 31h0"></path><path d="M270.5 31h0"></path><path d="M105.5 31a10 10 0 0 1 10 10v7a10 10 0 0 0 10 10"></path><g>
+<path d="M125.5 58h0"></path><path d="M250.5 58h0"></path><g class="terminal ">
+<path d="M125.5 58h0"></path><path d="M162.5 58h0"></path><rect height="22" rx="10" ry="10" style="fill: lightblue" width="37" x="125.5" y="47"></rect><text x="144" y="62">st</text></g><path d="M162.5 58h10"></path><g>
+<path d="M172.5 58h0"></path><path d="M250.5 58h0"></path><path d="M172.5 58a10 10 0 0 1 10 10v7a10 10 0 0 0 10 10"></path><g class="non-terminal ">
+<path d="M192.5 85h4.75"></path><path d="M225.75 85h4.75"></path><rect height="22" style="fill: khaki" width="28.5" x="197.25" y="74"></rect><text x="211.5" y="89">n</text></g><path d="M230.5 85a10 10 0 0 0 10 -10v-7a10 10 0 0 1 10 -10"></path></g></g><path d="M250.5 58a10 10 0 0 0 10 -10v-7a10 10 0 0 1 10 -10"></path></g><path d="M 270.5 31 h 20 m -10 -10 v 20 m 10 -20 v 20"></path></g></svg></div></div><h2>Reaction Rules</h2><small>TNFR1 activation and signal transduction cascade</small><small></small><div class="diagram-block"><h3>IKK(st~n) -&gt; IKK(st~a)</h3><div><svg class="railroad-diagram" height="177" viewBox="0 0 371 177" width="371">
+<g transform="translate(.5 .5)">
+<g>
+<path d="M20 21v20m10 -20v20m-10 -10h20"></path></g><path d="M40 31h10"></path><g class="terminal ">
+<path d="M50 31h0"></path><path d="M95.5 31h0"></path><rect height="22" rx="10" ry="10" style="fill: lightgreen" width="45.5" x="50" y="20"></rect><text x="72.75" y="35">IKK</text></g><path d="M95.5 31h10"></path><g>
+<path d="M105.5 31h0"></path><path d="M331 31h0"></path><path d="M105.5 31a10 10 0 0 1 10 10v7a10 10 0 0 0 10 10"></path><g>
+<path d="M125.5 58h0"></path><path d="M311 58h0"></path><g class="terminal ">
+<path d="M125.5 58h0"></path><path d="M162.5 58h0"></path><rect height="22" rx="10" ry="10" style="fill: lightblue" width="37" x="125.5" y="47"></rect><text x="144" y="62">st</text></g><path d="M162.5 58h10"></path><g>
+<path d="M172.5 58h0"></path><path d="M311 58h0"></path><path d="M172.5 58a10 10 0 0 1 10 10v7a10 10 0 0 0 10 10"></path><g>
+<path d="M192.5 85h10"></path><path d="M291 85h0"></path><path d="M222.5 85h10"></path><g class="non-terminal ">
+<path d="M232.5 85h0"></path><path d="M261 85h0"></path><rect height="22" style="fill: khaki" width="28.5" x="232.5" y="74"></rect><text x="246.75" y="89">n</text></g><path d="M261 85h10"></path><path d="M222.5 85v20a10 10 0 0 0 10 10"></path><g class="non-terminal ">
+<path d="M232.5 115h0"></path><path d="M261 115h0"></path><rect height="22" style="fill: khaki" width="28.5" x="232.5" y="104"></rect><text x="246.75" y="119">a</text></g><path d="M261 115a10 10 0 0 0 10 -10v-10"></path><g class="diagram-text">
+<title>take all branches, once each, in any order</title><path class="diagram-text" d="M 222.5 75 h -16 a 4 4 0 0 0 -4 4 v 12 a 4 4 0 0 0 4 4 h 16 z" style="fill: orange"></path><text class="diagram-text" x="212.5" y="91">⬇</text><path class="diagram-text" d="M 271 75 h 16 a 4 4 0 0 1 4 4 v 12 a 4 4 0 0 1 -4 4 h -16 z" style="fill: orange"></path><text class="diagram-text" x="281" y="91">⬇</text></g></g><path d="M291 85a10 10 0 0 0 10 -10v-7a10 10 0 0 1 10 -10"></path></g></g><path d="M311 58a10 10 0 0 0 10 -10v-7a10 10 0 0 1 10 -10"></path></g><path d="M 331 31 h 20 m -10 -10 v 20 m 10 -20 v 20"></path></g></svg></div></div><small>A20 synthesis and degradation, IkB transcription, translation, mRNA and protein degradation</small><small></small><small>Protein interactions</small><small></small>
+        </body>
+        </html>

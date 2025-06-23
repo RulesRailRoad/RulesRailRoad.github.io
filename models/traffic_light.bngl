@@ -1,0 +1,26 @@
+# Traffic Light Rule-Based Model (BNGL)
+
+# Define molecule types
+begin molecule types
+  TrafficLight(green~on~off, yellow~on~off, red~on~off)
+end molecule types
+
+
+# Define observables for tracking
+begin observables
+  Molecules GreenOn TrafficLight(green~on)
+
+end observables
+
+# Define parameters (e.g., rate constants)
+begin parameters
+  k_gy 1.0  # Rate for green → yellow transition
+end parameters
+
+# Define reaction rules
+begin reaction rules
+  # Green to Yellow transition rule
+  Green_to_Yellow: TrafficLight(green~on, yellow~off, red~off) -> TrafficLight(green~off, yellow~on, red~off) k_gy
+  TrafficLight(green~off, yellow~off, red~on) -> TrafficLight(green~on, yellow~off, red~off)
+  TrafficLight(green~off, yellow~on, red~off) -> TrafficLight(green~off, yellow~off, red~on)
+end reaction rules
