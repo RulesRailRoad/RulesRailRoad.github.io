@@ -150,9 +150,9 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
                 expr = parts.slice(2).join(' ')
             }
             if (expr.includes(':')) expr = expr.split(':')[1];
-            if (expr.includes("), ")) {
-                expr = expr.split(", ")
-                for (const subExpr of expr) {
+            if (/\),\s*/.test(expr)) {
+                const exprParts = expr.split(/\),\s*/).map(e => e.trim() + ')').filter(e => e !== ')');
+                for (const subExpr of exprParts) {
                     const trimmed = subExpr.trim();
                     const expanded = expandExpr(trimmed, molSiteDict);
                     output.push(bnglToRailroad(expanded, trimmed, null, molSiteDict, showBNGLString));
