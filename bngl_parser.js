@@ -74,7 +74,7 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
         `Object.assign(document.createElement("h2"), { textContent: "${moleculesLabel}" })` +
     ');'
     );
-    for (const line of moleculeLines) {
+    for (let line of moleculeLines) {
             if (!line) continue;
 
             if (line.startsWith('#')) {
@@ -87,6 +87,10 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
                 }
                 continue;
             }
+            if (line.includes('#')) {
+                line = line.split('#')[0].trim();
+            }
+            if (!line) continue;
         if (!line.startsWith('#')) {
             output.push(bnglToRailroad(line, null, null, molSiteDict, showBNGLString));
         }
