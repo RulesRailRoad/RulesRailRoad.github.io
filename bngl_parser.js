@@ -140,6 +140,7 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
                 }
                 continue;
             }
+            if (line.includes("==")) continue;
             const parts = line.split(/\s+/);
 
             let expr = ' ';
