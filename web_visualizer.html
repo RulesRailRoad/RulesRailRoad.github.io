@@ -237,7 +237,12 @@
         const blob = new Blob([htmlContent], { type: "text/html" });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
-        a.download = "bngl_diagrams.html";
+
+        const input = document.getElementById("bnglFile");
+        const filename = input.files[0]?.name || "bngl_diagrams.bngl";
+        const htmlFilename = filename.replace(/\.bngl$/i, "") + ".html";
+
+        a.download = htmlFilename;
         a.click();
         });
 
