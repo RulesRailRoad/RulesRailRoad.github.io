@@ -8,15 +8,24 @@ const bondAddedRev = "radded";
 const bondRemovedRev = "rbroken";
 const bindAndStateChange = "bind_and_state_change";
 
-function hasDuplicateSiteNames(sites) {
-    const seen = new Set();
+function getDuplicateSiteNameMap(sites) {
+    const counts = {};
+    const result = {};
+
     for (const s of sites) {
         const base = s.split('~')[0].split('!')[0];
-        if (seen.has(base)) return true;
-        seen.add(base);
+        counts[base] = (counts[base] || 0) + 1;
     }
-    return false;
+
+    for (const name in counts) {
+        if (counts[name] > 1) {
+            result[name] = true;  // this site is duplicated
+        }
+    }
+
+    return result;  // e.g., { r: true }
 }
+
 
 
 function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDict) {
@@ -79,7 +88,7 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
     // Determine which molecules have repeated site names
     const duplicateSiteTrackers = {};
     for (const mol of Object.keys(molSiteDict)) {
-        duplicateSiteTrackers[mol] = hasDuplicateSiteNames(molSiteDict[mol] || []);
+        duplicateSiteTrackers[mol] = getDuplicateSiteNameMap(molSiteDict[mol] || []);
     }
 
     if (!allRsites || !allPsites || allRsites.length !== allPsites.length) {
@@ -156,7 +165,7 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
             }
 
             const molBase = rmol.split(" #")[0];
-            const siteKey = duplicateSiteTrackers[molBase]
+            const siteKey = duplicateSiteTrackers[molBase]?.[rsite]
                 ? `${rmol}:${rsite}[${rIndex}]`
                 : `${rmol}:${rsite}`;
 
