@@ -229,13 +229,24 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
             }
             reactants_str = stripped_r.join(' + ');
 
-            const rateExprPattern = /\s+[a-zA-Z_]\w*\s*\*\s*[a-zA-Z_]\w+.*$/;
-            if (rateExprPattern.test(products_str)) {
-                products_str = products_str.split(rateExprPattern)[0].trim();
+            // Remove rate expressions with * or /
+            const multPattern = /\s+[a-zA-Z_]\w*\s*\*\s*[a-zA-Z_]\w+.*$/;
+            if (multPattern.test(products_str)) {
+                products_str = products_str.split(multPattern)[0].trim();
             }
-            const slashExprRegex = /\s*[a-zA-Z_]\w*\/[a-zA-Z_]\w+/;
-            if (slashExprRegex.test(products_str)) {
-                products_str = products_str.split(slashExprRegex)[0].trim();
+            const slashPattern = /\s*[a-zA-Z_]\w*\/[a-zA-Z_]\w+/;
+            if (slashPattern.test(products_str)) {
+                products_str = products_str.split(slashPattern)[0].trim();
+            }
+            // Remove rate expressions with +
+            const addPattern = /\b[a-zA-Z_]\w*\b\s*\+\s*\b[a-zA-Z_]\w*\b\s*\*\s*\b[a-zA-Z_]\w*\b/;
+            if (addPattern.test(products_str)) {
+                products_str = products_str.split(addPattern)[0].trim();
+            }
+            // Remove rate expressions with parentheses
+            const ratePattern = /\(+[\w.]+\s*\*\s*[\w.]+/;
+            if (ratePattern.test(products_str)) {
+                products_str = products_str.split(ratePattern)[0].trim();
             }
 
             const stripped_p = [];
