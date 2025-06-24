@@ -28,16 +28,31 @@ function expandExpr(bnglExpr, molSiteDict) {
 
             const allSites = [];
             if (usePosition) {
-                for (let i = 0; i < molSites.length; i++) {
-                    let s = inputSites[i];
+                const seenCount = {};
+                const inputMap = {};
+
+                for (let s of inputSites) {
+                    const base = s.split('~')[0].split('!')[0];
+                    seenCount[base] = (seenCount[base] || 0) + 1;
+                    const key = `${base}[${seenCount[base] - 1}]`;
+                    inputMap[key] = s;
+                }
+
+                const molCount = {};
+                for (let site of molSites) {
+                    const base = site.split('~')[0].split('!')[0];
+                    molCount[base] = (molCount[base] || 0) + 1;
+                    const key = `${base}[${molCount[base] - 1}]`;
+                    const s = inputMap[key];
                     if (s !== undefined) {
-                        if (!s.includes('!')) s += '!-';
-                        allSites.push(s);
+                        allSites.push(s.includes('!') ? s : `${s}!-`);
                     } else {
-                        allSites.push(molSites[i] + '!?');
+                        allSites.push(`${site}!?`);
                     }
+                }
             }
-            } else {
+
+             else {
                 const givenSites = {};
                 for (let s of inside.split(',')) {
                     s = s.trim();

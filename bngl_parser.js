@@ -82,7 +82,7 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
                 if (showComments) {
                     output.push(
                     'document.getElementById("diagramArea").appendChild(' +
-                        `Object.assign(document.createElement("small"), { textContent: "${lastComment}" })` +
+                        `Object.assign(document.createElement("small"), { textContent: ${JSON.stringify(lastComment)} })` +
                     ');');
                 }
                 continue;
@@ -112,7 +112,7 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
                 if (showComments) {
                     output.push(
                     'document.getElementById("diagramArea").appendChild(' +
-                        `Object.assign(document.createElement("small"), { textContent: "${lastComment}" })` +
+                        `Object.assign(document.createElement("small"), { textContent: ${JSON.stringify(lastComment)} })` +
                     ');');
                 }
                 continue;
@@ -139,7 +139,7 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
                 if (showComments) {
                     output.push(
                     'document.getElementById("diagramArea").appendChild(' +
-                        `Object.assign(document.createElement("small"), { textContent: "${lastComment}" })` +
+                        `Object.assign(document.createElement("small"), { textContent: ${JSON.stringify(lastComment)} })` +
                     ');');
                 }
                 continue;
@@ -187,7 +187,7 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
                 if (showComments) {
                     output.push(
                     'document.getElementById("diagramArea").appendChild(' +
-                        `Object.assign(document.createElement("small"), { textContent: "${lastComment}" })` +
+                        `Object.assign(document.createElement("small"), { textContent: ${JSON.stringify(lastComment)} })` +
                     ');');
                 }
                 continue;
@@ -265,7 +265,6 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
             products_str = stripped_p.join(' + ');
 
 
-            console.log(products_str);
             const expandedLHS = expandExpr(reactants_str.replace(/ \+ /g, '.'), molSiteDict);
             const expandedRHS = expandExpr(products_str.replace(/ \+ /g, '.'), molSiteDict);
 
