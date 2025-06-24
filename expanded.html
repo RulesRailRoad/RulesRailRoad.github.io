@@ -120,14 +120,27 @@
           const allSites = [];
           
           if (usePosition) {
-            for (let i = 0; i < molSites.length; i++) {
-              let s = inputSites[i];
-              if (s !== undefined) {
-                if (!s.includes('!')) s += '!-';
-                allSites.push(s);
-              } else {
-                allSites.push(molSites[i] + '!?');
-              }
+            const seenCount = {};
+            const inputMap = {};
+
+            for (let s of inputSites) {
+                const base = s.split('~')[0].split('!')[0];
+                seenCount[base] = (seenCount[base] || 0) + 1;
+                const key = `${base}[${seenCount[base] - 1}]`;
+                inputMap[key] = s;
+            }
+
+            const molCount = {};
+            for (let site of molSites) {
+                const base = site.split('~')[0].split('!')[0];
+                molCount[base] = (molCount[base] || 0) + 1;
+                const key = `${base}[${molCount[base] - 1}]`;
+                const s = inputMap[key];
+                if (s !== undefined) {
+                    allSites.push(s.includes('!') ? s : `${s}!-`);
+                } else {
+                    allSites.push(`${site}!?`);
+                }
             }
           } else {
           const givenSites = {};
@@ -266,11 +279,11 @@
         for (let i = 0; i < originalLines.length; i++) {
           const trimmed = originalLines[i].trim();
 
-          if (trimmed.toLowerCase() === "begin molecule types") {
+          if (trimmed.toLowerCase().startsWith("begin molecule")) {
             inMolBlock = true;
             continue;
           }
-          if (trimmed.toLowerCase() === "end molecule types") {
+          if (trimmed.toLowerCase().startsWith("end molecule")) {
             inMolBlock = false;
             continue;
           }
@@ -282,11 +295,11 @@
             inObsBlock = false;
             continue;
           }
-          if (trimmed.toLowerCase() === "begin reaction rules") {
+          if (trimmed.toLowerCase().startsWith("begin reaction")) {
             inRxnBlock = true;
             continue;
           }
-          if (trimmed.toLowerCase() === "end reaction rules") {
+          if (trimmed.toLowerCase().startsWith("end reaction")) {
             inRxnBlock = false;
             continue;
           }
