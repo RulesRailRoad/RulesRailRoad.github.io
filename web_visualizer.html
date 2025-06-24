@@ -94,6 +94,7 @@
   <div class="section">
     <label for="bnglFile">Input BNGL File:</label>
     <input type="file" id="bnglFile" accept=".bngl" />
+    <button id="clearBtn">Clear</button>
     <label><input type="checkbox" id="showComments" checked /> Display commented lines next to cartoons</label>
     <label><input type="checkbox" id="showBNGLString" checked /> Display BNGL next to cartoons</label>
     <label><input type="checkbox" id="useBNGLNotations" checked /> Use BNGL notations</label>
@@ -195,6 +196,14 @@
             alert("An error occurred while processing the BNGL file.");
             console.error("❌ Processing error:", err);
         }
+        });
+
+        document.getElementById("clearBtn").addEventListener("click", () => {
+          document.getElementById("bnglFile").value = "";
+          bnglText = '';
+          document.getElementById("diagramArea").innerHTML = "";
+          const bnglOutputBox = document.getElementById("bnglOutput");
+          bnglOutputBox.textContent = "";
         });
 
         document.addEventListener("click", (e) => {
