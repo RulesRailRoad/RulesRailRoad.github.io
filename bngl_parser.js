@@ -229,6 +229,15 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
             }
             reactants_str = stripped_r.join(' + ');
 
+            const rateExprPattern = /\s+[a-zA-Z_]\w*\s*\*\s*[a-zA-Z_]\w+.*$/;
+            if (rateExprPattern.test(products_str)) {
+                products_str = products_str.split(rateExprPattern)[0].trim();
+            }
+            const slashExprRegex = /\s*[a-zA-Z_]\w*\/[a-zA-Z_]\w+/;
+            if (slashExprRegex.test(products_str)) {
+                products_str = products_str.split(slashExprRegex)[0].trim();
+            }
+
             const stripped_p = [];
             const products = products_str.split(/(?<!!)\+/);
             for (let part of products) {
@@ -244,11 +253,8 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
             }
             products_str = stripped_p.join(' + ');
 
-            const mathExprRegex = /\b\w+\s*\*\s*\w+/;
-            if (mathExprRegex.test(products_str)) {
-                products_str = products_str.split(mathExprRegex)[0].trim();
-            }
 
+            console.log(products_str);
             const expandedLHS = expandExpr(reactants_str.replace(/ \+ /g, '.'), molSiteDict);
             const expandedRHS = expandExpr(products_str.replace(/ \+ /g, '.'), molSiteDict);
 
