@@ -1,6 +1,7 @@
 // Molecules_BNGL_to_Python.js
 
 export function bnglToRailroad(bnglString, displayString = null, changesDict = null, molSiteDict = {}, showBNGLString) {
+    if (!changesDict) changesDict = {};
     const MoleculeColor = 'lightgreen';
     const SiteColor = 'lightblue';
     const StateColor = 'khaki';
@@ -61,6 +62,13 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
             if (site.includes('~')) {
                 const parts = site.split('~');
                 siteName = parts[0];
+                
+                let index = siteNameIndex[siteName] || 0;
+                const indexedKey = `${moleculeInstance}:${siteName}[${index}]`;
+                const unindexedKey = `${moleculeInstance}:${siteName}`;
+                const siteKey = (changesDict && changesDict[indexedKey]) ? indexedKey : unindexedKey;
+                siteNameIndex[siteName] = index + 1;
+
                 states = parts.slice(1);
                 const finStates = [];
 
@@ -69,6 +77,7 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
                     bondNumArg = "";
                     bondTypeArg = "";
                     let stateName = state;
+                    const changes = changesDict[siteKey];
 
                     if (state.includes("!")) {
                         const splitState = state.split("!");
@@ -89,14 +98,7 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
                             bondNumArg = `, bond_num: \"${bondNum}\"`;
                         }
 
-                        if (changesDict) {
-                            let siteKey = `${moleculeInstance}:${siteName}`;
-                            if (siteNameCounts[siteName] > 1) {
-                                const index = siteNameIndex[siteName] || 0;
-                                siteKey = `${siteKey}[${index}]`;
-                                siteNameIndex[siteName] = index + 1;
-                            }
-                            const changes = changesDict[siteKey];
+                        
                             if (changes && changes.change.some(c => [bondAddedNonRev, bondRemovedNonRev, bondAddedRev, bondRemovedRev].includes(c))) {
                                 const bondChange = changes.change.find(c => [bondAddedNonRev, bondRemovedNonRev, bondAddedRev, bondRemovedRev].includes(c));
                                 bondTypeArg = `, bond_type: \"${bondChange}\"`;
@@ -106,18 +108,9 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
                                     bondNumArg = `, bond_num: \"${numArg}\"`;
                                 }
                             }
-                        }
+                        
                         state = stateName;
                     }
-
-                    if (changesDict) {
-                        let siteKey = `${moleculeInstance}:${siteName}`;
-                        if (siteNameCounts[siteName] > 1) {
-                            const index = siteNameIndex[siteName] || 0;
-                            siteKey = `${siteKey}[${index}]`;
-                            siteNameIndex[siteName] = index + 1;
-                        }
-                        const changes = changesDict[siteKey];
                         if (changes && (changes.change.includes(stateChangeUp) || changes.change.includes(stateChangeDown))) {
                             const direction = changes.change.includes(stateChangeDown) ? "down-arrow" : "up-arrow";
                             const reactantState = changes.reactant.split("~").slice(-1)[0].split("!")[0];
@@ -148,9 +141,7 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
                         } else {
                             finStates.push(`new NonTerminal(\"${state}\", { box_color: \"${StateColor}\"${bondArg}${bondNumArg}${bondTypeArg} })`);
                         }
-                    } else {
-                        finStates.push(`new NonTerminal(\"${state}\", { box_color: \"${StateColor}\"${bondArg}${bondNumArg}${bondTypeArg} })`);
-                    }
+                    
                 });
 
                 const stateChoices = finStates.join(", ");
