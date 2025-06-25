@@ -45,27 +45,28 @@
         Extended Backus-Naur Form (EBNF).
 Simplified description of BNGL grammar in <a href="https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form" style="color: blue;">EBNF</a> 
       (with compartments and matching omitted) looks like:
-        <br>
+        <br><br>
 <span style="font-family: monospace;">
 Name = Letter, [{Letter|Digit|"_"}];<br>
 State = “~",(Letter|Digit),[{Letter|Digit|"_"}] | "~"; <br>
-ComponentType = Name, [{"~",State}];<br>
-Component = Name, [{"~",State}];<br>
-MoleculeType = Name, ["(", [ComponentType, [{",",ComponentType}]], ")"]; <br>
-Molecule = Name, ["(",[Component,[{",",Component}]],")"]; <br>
-MoleculeTypeBlock = "begin molecule types", NewLine , {MoleculeType , NewLine}, "end molecule types", NewLine; <br>
+Site = Name, [{"~",State}];<br>
+Molecule = Name, ["(",[Site,[{",",Site}]],")"]; <br>
 </span>
 </p>
 
     <br>
     <p>This description is difficult to follow, so <a href-"https://en.wikipedia.org/wiki/Syntax_diagram">syntax diagrams</a> 
-      (also called railroad diagrams) were introduced. The site description is
+      (also called railroad diagrams) were introduced. 
+        The name declaration is
+  <br><img src="images/rr-name.png" width=300> 
+        <br>
+        The site description is
   <br><img src="images/rr-site.png" width=300> 
         <br>
       The molecule description would be
 <br><img src="images/rr-molecule.png" width=400> 
 
-
+<p>Using this approach, we extended the railroad diagrams to describe <b>specific</b> elements of rule-based description. </p>
    
 </body>
 </html>
