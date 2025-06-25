@@ -1000,8 +1000,15 @@ export class Terminal extends DiagramItem {
                             const up = new NonTerminal(this.bond_num, { box_color: "white" });
                             const up_height = up.up + up.down - 2;
                             
+                            let arrow_color = null;
+                            if (this.bond_type === "nrbroken" || this.bond_type === "rbroken") {
+                               arrow_color = "tomato";
+                            }
+                            if (this.bond_type === "nradded" || this.bond_type === "radded") {
+                               arrow_color = "limegreen";
+                            }
 
-                            const down = new NonTerminal(arrow, { box_color: "orange" });
+                            const down = new NonTerminal(arrow, { box_color: arrow_color });
                             if (this.bond_type === "nrbroken" || this.bond_type === "nradded") {
                                 down.width *= 0.75;
                                 up.width *= 0.75;
@@ -1232,7 +1239,15 @@ export class NonTerminal extends DiagramItem {
                             const up = new NonTerminal(this.bond_num, { box_color: "white" });
                             const up_height = up.up + up.down - 2;
                     
-                            const down = new NonTerminal(arrow, { box_color: "orange" });
+                            let arrow_color = null;
+                            if (this.bond_type === "nrbroken" || this.bond_type === "rbroken") {
+                               arrow_color = "tomato";
+                            }
+                            if (this.bond_type === "nradded" || this.bond_type === "radded") {
+                               arrow_color = "limegreen";
+                            }
+
+                            const down = new NonTerminal(arrow, { box_color: arrow_color });
                             if (this.bond_type === "nrbroken" || this.bond_type === "nradded") {
                                 down.width *= 0.75;
                                 up.width *= 0.75;
