@@ -1209,7 +1209,7 @@ export class NonTerminal extends DiagramItem {
                     let cx = 0, cy = 0;
                     if (this.bond_type === "circle") {
                         cx = x + width / 2;
-                        cy = y + this.height + AR * 4;
+                        cy = (this._bond_arc_bottom_y+8) || (y + this.height + AR * 4);
                         const term = new NonTerminal(this.bond_num, { box_color: "white" });
                         term.width *= 0.78;
                         term.format(cx - term.width / 2, cy, term.width).addTo(this);

@@ -158,8 +158,11 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
 
             if (
                 rstate !== pstate &&
-                rbond !== pbond &&
-                rsite === psite
+                rsite === psite &&
+                (
+                    rbond !== pbond ||           // bond change
+                    (rbond === pbond && rbond !== "!-") // or bond same but not broken
+                )
             ) {
                 change.push(bindAndStateChange);
             }
