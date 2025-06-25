@@ -1172,16 +1172,20 @@ export class NonTerminal extends DiagramItem {
                 if (this.state_and_bond_wrap) {
                 const arc_start = x - AR;
                 const arc_height = AR * 1.5;
+
+                const isUnknownBond = this.bond_num === "?";
+                const strokeStyle = isUnknownBond ? "stroke: gray; stroke-dasharray: 4,2" : "stroke: black";
+
                 const path1 = new Path(arc_start, y - AR / 2)
                     .down(arc_height*4).arc("ws").right(width / 2 - AR).arc("ne");
                 path1.attrs.class = "bottom-bind";
-                path1.attrs.style = "stroke: black";
+                path1.attrs.style = strokeStyle;
                 path1.addTo(this);
 
                 const path2 = new Path(x + AR + width, y - AR / 2)
                     .down(arc_height*4).arc("es").left(width / 2 - AR).arc("nw");
                 path2.attrs.class = "bottom-bind";
-                path2.attrs.style = "stroke: black";
+                path2.attrs.style = strokeStyle;
                 path2.addTo(this);
                 this._bond_arc_bottom_y = y - AR /2 + arc_height * 4 + AR * 2;
                 }
