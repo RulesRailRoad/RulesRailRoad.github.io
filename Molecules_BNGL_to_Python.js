@@ -39,7 +39,7 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
             return; // skip site processing
         }
 
-        const sites = siteBlock.split(',').map(s => s.trim());
+        const sites = siteBlock.split(',').map(s => s.trim()).filter(s => s);
 
         // Build per-molecule-instance map of site name counts
         const siteNameCounts = {};

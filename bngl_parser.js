@@ -26,8 +26,11 @@ export function joinLines(lines) {
 
 export function moleculeSiteDict(lines) {
     const dict = {};
-    for (const line of lines) {
-        if (line.startsWith('#') || !line.includes('(')) continue;
+    for (let line of lines) {
+        if (line.startsWith('#') || !line) continue;
+        if (!line.includes('(')) {
+            line = MalformedMolecules(line);
+        }
         const match = line.match(/(\w+)\((.*?)\)/);
         if (!match) continue;
         const [_, mol, sitesBlock] = match;
@@ -35,6 +38,12 @@ export function moleculeSiteDict(lines) {
         dict[mol] = sites;
     }
     return dict;
+}
+
+function MalformedMolecules(line) {
+    line = line.split(/\s+/)[0].trim();
+    const newline = line + '()';
+    return newline;
 }
 
 export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLString) {
@@ -92,6 +101,9 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
             }
             if (!line) continue;
         if (!line.startsWith('#')) {
+            if (!line.includes('(')) {
+                line = MalformedMolecules(line);
+            }
             output.push(bnglToRailroad(line, null, null, molSiteDict, showBNGLString));
         }
     }
@@ -117,9 +129,15 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
                 }
                 continue;
             }
-            const parts = line.split(/\s+/);
+            let parts = line.split(/\s+/);
+            if (!parts.includes('(')) {
+                if (molSiteDict.hasOwnProperty(parts[0])) {
+                    parts = MalformedMolecules(parts.join(' ')).split(/\s+/);
+                }
+            }
             let species = parts.find(p => p.includes('(') && p.includes(')')) || '';
             if (species.includes(':')) species = species.split(':')[1];
+
             if (species) output.push(bnglToRailroad(species, null, null, molSiteDict, showBNGLString));
         }
     }
@@ -218,6 +236,23 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
             const reactants = reactants_str.split(/(?<!!)\+/);
             for (let part of reactants) {
                 part = part.trim();
+                if (!part.includes('(')) {
+                    if (molSiteDict.hasOwnProperty(part)) {
+                        part = MalformedMolecules(part);
+                    }
+                }
+                if (part.includes('.')) {
+                    let splitparts = part.split('.').map(p => {
+                        if (!p.includes('(')) {
+                            if (molSiteDict.hasOwnProperty(p)) {
+                                const fixed = MalformedMolecules(p);
+                                return fixed;
+                            }
+                        }
+                        return p;
+                    });
+                    part = splitparts.join('.');
+                }
                 const endIdx = part.lastIndexOf(")");
                 if (endIdx !== -1) {
                     part = part.slice(0, endIdx + 1);
@@ -253,6 +288,24 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
             const products = products_str.split(/(?<!!)\+/);
             for (let part of products) {
                 part = part.trim();
+                if (!part.includes('(')) {
+                    if (molSiteDict.hasOwnProperty(part)) {
+                        part = MalformedMolecules(part);
+                    }
+                }
+                if (part.includes('.')) {
+                    let splitparts = part.split('.').map(p => {
+                        if (!p.includes('(')) {
+                            p = p.split(/\s+/)[0].trim();
+                            if (molSiteDict.hasOwnProperty(p)) {
+                                const fixed = MalformedMolecules(p);
+                                return fixed;
+                            }
+                        }
+                        return p;
+                    });
+                    part = splitparts.join('.');
+                }
                 const endIdx = part.lastIndexOf(")");
                 if (endIdx !== -1) {
                     part = part.slice(0, endIdx + 1);
