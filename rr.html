@@ -46,7 +46,8 @@
 Simplified description of BNGL grammar in <a href="https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form" style="color: blue;">EBNF</a> 
       (with compartments and matching omitted) looks like:
         <br>
-<code>Name = Letter, [{Letter|Digit|"_"}];
+<span style="font-family: monospace;">
+    Name = Letter, [{Letter|Digit|"_"}];
 State = “~",(Letter|Digit),[{Letter|Digit|"_"}] | "~"; 
 Bond = "!",{Digit} | "!?" | "!+";
 ComponentType = Name, [{"~",State}];
@@ -54,15 +55,16 @@ Component = Name, [{"~",State | "!",Bond | "%",Tag}];
 MoleculeType = Name, ["(", [ComponentType, [{",",ComponentType}]], ")"]; 
 Molecule = Name, ["(",[Component,[{",",Component}]],")"]; 
 MoleculeTypeBlock = "begin molecule types", NewLine , {MoleculeType , NewLine}, "end molecule types", NewLine; 
-</code>
+</span>
 </p>
 
     <br>
     <p>This description is difficult to follow, so <a href-"https://en.wikipedia.org/wiki/Syntax_diagram">syntax diagrams</a> 
-      (also called railroad diagrams) were introduced. The site description would be
-  <br><img src="images/rr-site.png" width=600> 
+      (also called railroad diagrams) were introduced. The site description is
+  <br><img src="images/rr-site.png" width=300> 
+        <br>
       The molecule description would be
-<br><img src="images/rr-molecule.png" width=600> 
+<br><img src="images/rr-molecule.png" width=400> 
 
 
    
