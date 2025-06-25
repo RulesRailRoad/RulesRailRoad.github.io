@@ -39,10 +39,14 @@
 
     <h2>Syntax diagrams</h2>
 
-    <p>Rule-based languages such as BNGL (BioNetGen Language) consists of symbolic sentences describing  molecules, species, observables, reaction rules, and other parts of BNGL file. The grammar for BNGL was described by Faeder in Extended Backus-Naur Form (EBNF) (https://github.com/RuleWorld/BNG_vscode_extension/blob/main/bngl-grammar-ebnf.pdf).
-Simplified description of BNGL grammar in <a href="https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form">EBNF</a> 
+    <p>Rule-based languages such as BNGL (BioNetGen Language) consists of symbolic sentences describing  molecules, species, observables, 
+        reaction rules, and other parts of BNGL file. 
+        The <a href="https://github.com/RuleWorld/BNG_vscode_extension/blob/main/bngl-grammar-ebnf.pdf" style="color: blue;>grammar</a> for BNGL was described by Faeder in 
+        Extended Backus-Naur Form (EBNF).
+Simplified description of BNGL grammar in <a href="https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form" style="color: blue;>EBNF</a> 
       (with compartments and matching omitted) looks like:
-<tt>Name = Letter, [{Letter|Digit|"_"}];
+        <br>
+<code>Name = Letter, [{Letter|Digit|"_"}];
 State = “~",(Letter|Digit),[{Letter|Digit|"_"}] | "~"; 
 Bond = "!",{Digit} | "!?" | "!+";
 ComponentType = Name, [{"~",State}];
@@ -50,7 +54,7 @@ Component = Name, [{"~",State | "!",Bond | "%",Tag}];
 MoleculeType = Name, ["(", [ComponentType, [{",",ComponentType}]], ")"]; 
 Molecule = Name, ["(",[Component,[{",",Component}]],")"]; 
 MoleculeTypeBlock = "begin molecule types", NewLine , {MoleculeType , NewLine}, "end molecule types", NewLine; 
-</tt>
+</code>
 </p>
 
     <br>
