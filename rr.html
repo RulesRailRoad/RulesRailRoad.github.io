@@ -41,14 +41,15 @@
 
     <p>Rule-based languages such as BNGL (BioNetGen Language) consists of symbolic sentences describing  molecules, species, observables, 
         reaction rules, and other parts of BNGL file. 
-        The <a href="https://github.com/RuleWorld/BNG_vscode_extension/blob/main/bngl-grammar-ebnf.pdf" style="color: blue;">grammar</a> for BNGL was described by Faeder in 
-        Extended Backus-Naur Form (EBNF).
-Simplified description of BNGL grammar in <a href="https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form" style="color: blue;">EBNF</a> 
-      (with compartments and matching omitted) looks like:
+        The <a href="https://github.com/RuleWorld/BNG_vscode_extension/blob/main/bngl-grammar-ebnf.pdf" style="color: blue;">grammar</a> 
+        for BNGL was described by Faeder in Extended Backus-Naur Form 
+        (<a href="https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form" style="color: blue;">EBNF</a>).
+Simplified description of BNGL grammar 
+      (with not as precise description of names, and some BNGL features like compartments and matching omitted) looks like:
         <br><br>
 <span style="font-family: monospace;">
 Name = Letter, [{Letter|Digit|"_"}];<br>
-State = “~",(Letter|Digit),[{Letter|Digit|"_"}] | "~"; <br>
+State = “~",Name; <br>
 Site = Name, [{"~",State}];<br>
 Molecule = Name, ["(",[Site,[{",",Site}]],")"]; <br>
 </span>
