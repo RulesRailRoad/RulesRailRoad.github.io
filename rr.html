@@ -47,14 +47,13 @@ Simplified description of BNGL grammar in <a href="https://en.wikipedia.org/wiki
       (with compartments and matching omitted) looks like:
         <br>
 <span style="font-family: monospace;">
-    Name = Letter, [{Letter|Digit|"_"}];
-State = “~",(Letter|Digit),[{Letter|Digit|"_"}] | "~"; 
-Bond = "!",{Digit} | "!?" | "!+";
-ComponentType = Name, [{"~",State}];
-Component = Name, [{"~",State | "!",Bond | "%",Tag}];
-MoleculeType = Name, ["(", [ComponentType, [{",",ComponentType}]], ")"]; 
-Molecule = Name, ["(",[Component,[{",",Component}]],")"]; 
-MoleculeTypeBlock = "begin molecule types", NewLine , {MoleculeType , NewLine}, "end molecule types", NewLine; 
+Name = Letter, [{Letter|Digit|"_"}];<br>
+State = “~",(Letter|Digit),[{Letter|Digit|"_"}] | "~"; <br>
+ComponentType = Name, [{"~",State}];<br>
+Component = Name, [{"~",State}];<br>
+MoleculeType = Name, ["(", [ComponentType, [{",",ComponentType}]], ")"]; <br>
+Molecule = Name, ["(",[Component,[{",",Component}]],")"]; <br>
+MoleculeTypeBlock = "begin molecule types", NewLine , {MoleculeType , NewLine}, "end molecule types", NewLine; <br>
 </span>
 </p>
 
