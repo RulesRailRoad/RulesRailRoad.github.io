@@ -1,6 +1,6 @@
 // Molecules_BNGL_to_Python.js
 
-export function bnglToRailroad(bnglString, displayString = null, changesDict = null, molSiteDict = {}, showBNGLString) {
+export function bnglToRailroad(bnglString, displayString = null, changesDict = null, molSiteDict = {}, showBNGLString, arrow = null) {
     if (!changesDict) changesDict = {};
     const MoleculeColor = 'lightgreen';
     const SiteColor = 'lightblue';
@@ -137,7 +137,7 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
                                 const match = s === state ? `${bondArg}${bondNumArg}${bondTypeArg}` : "";
                                 return `new NonTerminal(\"${s}\", { box_color: \"${StateColor}\"${match}${extraLayoutArg} })`;
                             });
-                            finStates.push(`new MultipleChoice(0, \"${direction}\", ${allStates.join(", ")})`);
+                            finStates.push(`new MultipleChoice(0, \"${direction}\", \"${arrow}\", ${allStates.join(", ")})`);
                         } else {
                             finStates.push(`new NonTerminal(\"${state}\", { box_color: \"${StateColor}\"${bondArg}${bondNumArg}${bondTypeArg} })`);
                         }

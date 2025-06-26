@@ -104,7 +104,7 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
             if (!line.includes('(')) {
                 line = MalformedMolecules(line);
             }
-            output.push(bnglToRailroad(line, null, null, molSiteDict, showBNGLString));
+            output.push(bnglToRailroad(line, null, null, molSiteDict, showBNGLString, null));
         }
     }
 
@@ -138,7 +138,7 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
             let species = parts.find(p => p.includes('(') && p.includes(')')) || '';
             if (species.includes(':')) species = species.split(':')[1];
 
-            if (species) output.push(bnglToRailroad(species, null, null, molSiteDict, showBNGLString));
+            if (species) output.push(bnglToRailroad(species, null, null, molSiteDict, showBNGLString, null));
         }
     }
 
@@ -184,7 +184,7 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
                 }
             } else {
             const expanded = expandExpr(expr, molSiteDict);
-            output.push(bnglToRailroad(expanded, expr, null, molSiteDict, showBNGLString));
+            output.push(bnglToRailroad(expanded, expr, null, molSiteDict, showBNGLString, null));
             }
         }
     }
@@ -289,6 +289,7 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
             for (let part of products) {
                 part = part.trim();
                 if (!part.includes('(')) {
+                    part = part.split(/\s+/)[0].trim();
                     if (molSiteDict.hasOwnProperty(part)) {
                         part = MalformedMolecules(part);
                     }
@@ -329,7 +330,7 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
             const display = `${reactants_str} ${arrow} ${products_str}`;
             const changes = compareReactions(expandedLHS, expandedRHS, arrow, molSiteDict);
             if (changes) {
-            output.push(bnglToRailroad(expandedLHS, display, changes, molSiteDict, showBNGLString));}
+            output.push(bnglToRailroad(expandedLHS, display, changes, molSiteDict, showBNGLString, arrow));}
         }
     }
 

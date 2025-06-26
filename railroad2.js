@@ -662,12 +662,14 @@ export class Choice extends DiagramMultiContainer {
 }
 
 export class MultipleChoice extends DiagramMultiContainer {
-    constructor(defaultIndex, type, ...items) {
+    constructor(defaultIndex, type, arrow, ...items) {
         super("g", items);
         if (!(0 <= defaultIndex && defaultIndex < items.length)) throw new Error("Invalid default index");
         if (!["up-arrow", "down-arrow"].includes(type)) throw new Error("Invalid type");
+        if (!["->", "<->"].includes(arrow)) throw new Error("Invalid arrow type");
         this.default = defaultIndex;
         this.type = type;
+        this.arrow = arrow;
         this.needsSpace = true;
         this.innerWidth = Math.max(...this.items.map(item => item.width));
         this.width = 30 + AR + this.innerWidth + AR + 20;
@@ -720,8 +722,8 @@ export class MultipleChoice extends DiagramMultiContainer {
 
         new Path(x + 30, y).right(AR).addTo(this);
         defaultItem.format(x + 30 + AR, y, this.innerWidth).addTo(this);
-        new Path(x + 30 + AR + this.innerWidth, y + this.height).right(AR).addTo(this);
-
+        new Path(x + 30 + AR + this.innerWidth, y + this.height).right(AR*3).addTo(this); //no box on the right
+        //new Path(x + 30 + AR + this.innerWidth, y + this.height).right(AR).addTo(this); // box on the right
         const below = this.items.slice(this.default + 1);
         if (below.length) {
             let distanceFromY = Math.max(10 + AR, defaultItem.height + defaultItem.down + VS + below[0].up);
@@ -730,7 +732,8 @@ export class MultipleChoice extends DiagramMultiContainer {
                 new Path(x + 30, y).down(distanceFromY - AR).arc("ws").addTo(this);
                 item.format(x + 30 + AR, y + distanceFromY, this.innerWidth).addTo(this);
                 new Path(x + 30 + AR + this.innerWidth, y + distanceFromY + item.height)
-                    .arc("se").up(distanceFromY - AR + item.height - defaultItem.height - 10).addTo(this);
+                    .arc("se").up(distanceFromY - AR + item.height - defaultItem.height).addTo(this); //no box on the right
+                    //.arc("se").up(distanceFromY - AR + item.height - defaultItem.height-10).addTo(this); // box on the right
                 const nextItem = below[i + 1];
                 if (nextItem) {
                     distanceFromY += Math.max(AR, item.height + item.down + VS + nextItem.up);
@@ -759,18 +762,39 @@ export class MultipleChoice extends DiagramMultiContainer {
             class: "diagram-text"
         }, this.type === "up-arrow" ? "⬆" : "⬇").addTo(textGroup);
 
+        // no box on the right
+        if (this.arrow === "<->") {
+            new DiagramItem("path", {
+                d: `M ${x + this.width - 20} ${y - 10} h 16 a 4 4 0 0 1 4 4 v 12 a 4 4 0 0 1 -4 4 h -16 z`,
+                class: "diagram-text",
+                style: "fill: orange"
+            }).addTo(textGroup);
+        }
+
+        /* // create a box on the right
         new DiagramItem("path", {
             d: `M ${x + this.width - 20} ${y - 10} h 16 a 4 4 0 0 1 4 4 v 12 a 4 4 0 0 1 -4 4 h -16 z`,
             class: "diagram-text",
             style: "fill: orange"
         }).addTo(textGroup);
+        */
 
-        new DiagramItem("text", {
-            x: x + this.width - 10,
-            y: y + 6,
-            class: "diagram-text"
-        }, this.type === "up-arrow" ? "⬆" : "⬇").addTo(textGroup);
+        // no box on the right
+        if (this.arrow === "<->") {
+            new DiagramItem("text", {
+                x: x + this.width - 10,
+                y: y + 6,
+                class: "diagram-text"
+            }, this.type === "up-arrow" ? "⬇" : "⬆").addTo(textGroup);
 
+        } /* // create a box on the right
+        else {
+            new DiagramItem("text", {
+                x: x + this.width - 10,
+                y: y + 6,
+                class: "diagram-text"
+            }, this.type === "up-arrow" ? "⬆" : "⬇").addTo(textGroup);
+        } */
 
         return this;
     }
@@ -1002,7 +1026,7 @@ export class Terminal extends DiagramItem {
                             
                             let arrow_color = null;
                             if (this.bond_type === "nrbroken" || this.bond_type === "rbroken") {
-                               arrow_color = "tomato";
+                               arrow_color = "red";
                             }
                             if (this.bond_type === "nradded" || this.bond_type === "radded") {
                                arrow_color = "limegreen";
@@ -1241,7 +1265,7 @@ export class NonTerminal extends DiagramItem {
                     
                             let arrow_color = null;
                             if (this.bond_type === "nrbroken" || this.bond_type === "rbroken") {
-                               arrow_color = "tomato";
+                               arrow_color = "red";
                             }
                             if (this.bond_type === "nradded" || this.bond_type === "radded") {
                                arrow_color = "limegreen";
