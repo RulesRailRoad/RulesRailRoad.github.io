@@ -871,11 +871,28 @@ export class End extends DiagramItem {
   }
 }
 
+/*
+changeType:
++ to + (NoChangeSeparate): horizontal line color is white
+. to . (NoChangeComplex): horizontal line color is gray
+
++ to . (NonRevChangeComplex): horizontal line color is gray, add green nonterminal with down arrow
+. to + (NonRevChangeSeparate): horizontal line color is gray, add red nonterminal with up arrow
+
+Rev:
++ to . (RevChangeComplex): horizontal line color is gray, add green nonterminal with two arrows
+. to + (RevChangeSeparate): horizontal line color is gray, add red nonterminal with two arrows
+
+
+
+*/
+
 export class EndWhiteSpace extends DiagramItem {
-  constructor(type = "simple") {
-    super("path");
+  constructor(changeType = null, type = "simple") {
+    super("g");
     this.type = type;
-    this.width = 10;
+    this.changeType = changeType;
+    this.width = 50;
     this.up = 10;
     this.down = 10;
     addDebug(this);
@@ -883,9 +900,40 @@ export class EndWhiteSpace extends DiagramItem {
 
   format(x, y, width) {
     if (this.type === "simple") {
-      this.attrs["d"] = `M ${x} ${y - 10} v 20 M ${x + 10} ${y - 10} v 20`;
+        if (this.changeType) {
+            if (this.changeType === "NoChangeComplex" || this.changeType === "NoChangeSeparate") {
+                const horiz = new Path(x, y).h(50);
+                horiz.attrs.style = `stroke: gray;`;
+                if (this.changeType === "NoChangeSeparate") {
+                    horiz.attrs.style = `stroke: white;`;
+                }
+                horiz.addTo(this);
+            } else {
+                const horiz1 = new Path(x, y).h(20);
+                    horiz1.attrs.style = `stroke: gray;`;
+                    horiz1.addTo(this);
+                const horiz2 = new Path(x+30, y).h(20);
+                    horiz2.attrs.style = `stroke: gray;`;
+                    horiz2.addTo(this);
+                let term = null;
+                if (this.changeType === "NonRevChangeComplex") {
+                    term = new NonTerminal("⬇", { box_color: "limegreen" });
+                } else if (this.changeType === "NonRevChangeSeparate"){
+                    term = new NonTerminal("⬆" , { box_color: "red" });
+                } else if (this.changeType === "RevChangeComplex") {
+                    term = new NonTerminal("⬇⬆", { box_color: "limegreen" });
+                } else if (this.changeType === "RevChangeSeparate"){
+                    term = new NonTerminal("⬆⬇", { box_color: "red" });
+                }
+                term.width *= 0.75;
+                term.format(x+18, y, 15).addTo(this);
+            }
+        }
+      const vert1 = new Path(x, y - 10).v(20).addTo(this);
+      const vert2 = new Path(x + 50, y - 10).v(20).addTo(this);
+
     } else if (this.type === "complex") {
-      this.attrs["d"] = `M ${x + 20} ${y - 10} v 20`;
+      new Path(x + 20, y - 10).v(20).addTo(this);
     }
     return this;
   }
@@ -1016,7 +1064,7 @@ export class Terminal extends DiagramItem {
                         const arrow = {
                             nrbroken: "⬆",
                             nradded: "⬇",
-                            radded: "⬆⬇",
+                            radded: "⬇⬆",
                             rbroken: "⬆⬇"
                         }[this.bond_type];
 
@@ -1255,7 +1303,7 @@ export class NonTerminal extends DiagramItem {
                         const arrow = {
                             nrbroken: "⬆",
                             nradded: "⬇",
-                            radded: "⬆⬇",
+                            radded: "⬇⬆",
                             rbroken: "⬆⬇"
                         }[this.bond_type];
 
