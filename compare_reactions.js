@@ -8,6 +8,13 @@ const bondAddedRev = "radded";
 const bondRemovedRev = "rbroken";
 const bindAndStateChange = "bind_and_state_change";
 
+const NoChangeComplex = "NoChangeComplex";
+const NoChangeSeparate = "NoChangeSeparate";
+const NonRevChangeComplex = "NonRevChangeComplex";
+const NonRevChangeSeparate = "NonRevChangeSeparate";
+const RevChangeComplex = "RevChangeComplex";
+const RevChangeSeparate = "RevChangeSeparate";
+
 function getDuplicateSiteNameMap(sites) {
     const counts = {};
     const result = {};
@@ -26,9 +33,64 @@ function getDuplicateSiteNameMap(sites) {
     return result;  // e.g., { r: true }
 }
 
+function compareComplexSeparation(expandedReactants, expandedProducts, arrow) { 
+    // extract delimiter order
+    function extractGroupOrder(str) {
+        const delimiters = [];
+        for (let i=0; i<str.length; i++) {
+            const char = str[i];
+            if (char === '.') {
+                delimiters.push(char);
+            } else if (char === '+' && str[i+1] === " ") {
+                delimiters.push(char);
+            }
+            
+        } return delimiters;
+    }
+
+    const changes = []
+    const reactantOrder = extractGroupOrder(expandedReactants);
+    const productOrder = extractGroupOrder(expandedProducts);
+
+    if (reactantOrder.length !== productOrder.length) {
+        console.warn("Mismatched reaction order — skipping reaction comparison.");
+        return;
+    }
+
+    for (let i = 0; i < reactantOrder.length; i++) {
+        if (reactantOrder[i] === productOrder[i]) {
+            if (reactantOrder[i] === "+") {
+                changes.push(NoChangeSeparate);
+            } else {
+                changes.push(NoChangeComplex);
+            }
+        } else {
+            if (reactantOrder[i] === "+") {
+                if (arrow === "->") {
+                    changes.push(NonRevChangeComplex);
+                } else {
+                    changes.push(RevChangeComplex);
+                }
+            } else {
+                if (arrow === "->") {
+                    changes.push(NonRevChangeSeparate);
+                } else {
+                    changes.push(RevChangeSeparate);
+                }
+            }
+        }
+    }
+    return changes;
+}
+
 
 
 function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDict) {
+    // send to function to compare + . changes
+    const complexChanges = compareComplexSeparation(expandedReactants, expandedProducts, arrow, molSiteDict);
+
+    expandedReactants = expandedReactants.replace(/ \+ /g, '.')
+    expandedProducts = expandedProducts.replace(/ \+ /g, '.');
     const changesDict = {};
     const rmolCounter = {};
     const pmolCounter = {};
@@ -43,7 +105,7 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
     if (reactantOrder.join(",") !== productOrder.join(",")) {
         console.warn("Molecule order mismatch — skipping reaction:", "reactants:", reactantOrder,
             "products:", productOrder);
-        return;
+        return { changes: null, complexChanges: null };
     }
 
 
@@ -94,7 +156,7 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
     if (!allRsites || !allPsites || allRsites.length !== allPsites.length) {
     console.error("Skipping reaction comparison due to mismatched reactants and products.", 
                   "Reactants:", allRsites, "Products:", allPsites);
-    return;
+    return { changes: null, complexChanges: null };
 }
     for (let i = 0; i < allRsites.length; i++) {
         const [rmol, rRaw, rsite, rIndex] = allRsites[i];
@@ -177,11 +239,14 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
                 site: rsite,
                 reactant: rRaw,
                 product: pRaw,
-                change: change
+                change: change,
             };
         }
     }
-    return changesDict;
+    return {
+        changes: changesDict,
+        complexChanges: complexChanges
+    };
 }
 
 export {
@@ -192,5 +257,11 @@ export {
     bondRemovedNonRev,
     bondAddedRev,
     bondRemovedRev,
-    bindAndStateChange
+    bindAndStateChange,
+    NoChangeComplex,
+    NoChangeSeparate,
+    NonRevChangeComplex,
+    NonRevChangeSeparate,
+    RevChangeComplex,
+    RevChangeSeparate
 };

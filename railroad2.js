@@ -928,6 +928,10 @@ export class EndWhiteSpace extends DiagramItem {
                 term.width *= 0.75;
                 term.format(x+18, y, 15).addTo(this);
             }
+        } else {
+            const horiz = new Path(x, y).h(50);
+                horiz.attrs.style = `stroke: gray;`;
+                horiz.addTo(this);
         }
       const vert1 = new Path(x, y - 10).v(20).addTo(this);
       const vert2 = new Path(x + 50, y - 10).v(20).addTo(this);

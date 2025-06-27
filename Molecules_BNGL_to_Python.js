@@ -1,6 +1,6 @@
 // Molecules_BNGL_to_Python.js
 
-export function bnglToRailroad(bnglString, displayString = null, changesDict = null, molSiteDict = {}, showBNGLString, arrow = null) {
+export function bnglToRailroad(bnglString, displayString = null, changesDict = null, molSiteDict = {}, showBNGLString, arrow = null, complexChanges = null) {
     if (!changesDict) changesDict = {};
     const MoleculeColor = 'lightgreen';
     const SiteColor = 'lightblue';
@@ -13,6 +13,13 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
     const stateChangeUp = "change from bottom state to top state";
     const stateChangeDown = "change from top state to bottom state";
     const bindAndStateChange = "bind_and_state_change";
+
+    const NoChangeComplex = "NoChangeComplex";
+    const NoChangeSeparate = "NoChangeSeparate";
+    const NonRevChangeComplex = "NonRevChangeComplex";
+    const NonRevChangeSeparate = "NonRevChangeSeparate";
+    const RevChangeComplex = "RevChangeComplex";
+    const RevChangeSeparate = "RevChangeSeparate";
 
     const molChunks = bnglString.split('.');
     const label = showBNGLString ? (displayString || bnglString).trim() : " ";
@@ -186,7 +193,12 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
         });
 
         if (idx < molChunks.length - 1) {
-            diagrams.push("        new EndWhiteSpace(),");
+            if (complexChanges) {
+                const complexChange = complexChanges[idx]
+                diagrams.push(`        new EndWhiteSpace(\'${complexChange}\'),`);
+            } else {
+                diagrams.push("        new EndWhiteSpace(),");
+            }
         }
     });
 
