@@ -33,6 +33,7 @@ function getDuplicateSiteNameMap(sites) {
     return result;  // e.g., { r: true }
 }
 
+// function to compare + and . changes in reactions
 function compareComplexSeparation(expandedReactants, expandedProducts, arrow) { 
     // extract delimiter order
     function extractGroupOrder(str) {
@@ -105,7 +106,7 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
     if (reactantOrder.join(",") !== productOrder.join(",")) {
         console.warn("Molecule order mismatch — skipping reaction:", "reactants:", reactantOrder,
             "products:", productOrder);
-        return { changes: null, complexChanges: null };
+        return { changes: null, complexChanges: null }; // return + . changes
     }
 
 
@@ -156,7 +157,7 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
     if (!allRsites || !allPsites || allRsites.length !== allPsites.length) {
     console.error("Skipping reaction comparison due to mismatched reactants and products.", 
                   "Reactants:", allRsites, "Products:", allPsites);
-    return { changes: null, complexChanges: null };
+    return { changes: null, complexChanges: null }; // return + . changes
 }
     for (let i = 0; i < allRsites.length; i++) {
         const [rmol, rRaw, rsite, rIndex] = allRsites[i];
@@ -245,7 +246,7 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
     }
     return {
         changes: changesDict,
-        complexChanges: complexChanges
+        complexChanges: complexChanges // return + . changes
     };
 }
 

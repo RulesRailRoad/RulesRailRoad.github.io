@@ -194,6 +194,7 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
 
         if (idx < molChunks.length - 1) {
             if (complexChanges) {
+                // adds separator between molecules
                 const complexChange = complexChanges[idx]
                 diagrams.push(`        new EndWhiteSpace(\'${complexChange}\'),`);
             } else {

@@ -887,12 +887,13 @@ Rev:
 
 */
 
+// for separating molecule diagrams
 export class EndWhiteSpace extends DiagramItem {
   constructor(changeType = null, type = "simple") {
     super("g");
     this.type = type;
     this.changeType = changeType;
-    this.width = 50;
+    this.width = 50; // space between two | |
     this.up = 10;
     this.down = 10;
     addDebug(this);
@@ -901,20 +902,23 @@ export class EndWhiteSpace extends DiagramItem {
   format(x, y, width) {
     if (this.type === "simple") {
         if (this.changeType) {
+            // separator for no changes
             if (this.changeType === "NoChangeComplex" || this.changeType === "NoChangeSeparate") {
                 const horiz = new Path(x, y).h(50);
-                horiz.attrs.style = `stroke: gray;`;
+                horiz.attrs.style = `stroke: gray;`; // . to .
                 if (this.changeType === "NoChangeSeparate") {
-                    horiz.attrs.style = `stroke: white;`;
+                    horiz.attrs.style = `stroke: white;`; // + to +
                 }
                 horiz.addTo(this);
-            } else {
+            } else { // separator for reversible and nonreversible changes
+                // draws two connecting gray lines
                 const horiz1 = new Path(x, y).h(20);
                     horiz1.attrs.style = `stroke: gray;`;
                     horiz1.addTo(this);
                 const horiz2 = new Path(x+30, y).h(20);
                     horiz2.attrs.style = `stroke: gray;`;
                     horiz2.addTo(this);
+                // adds arrow depending on the change
                 let term = null;
                 if (this.changeType === "NonRevChangeComplex") {
                     term = new NonTerminal("⬇", { box_color: "limegreen" });
@@ -928,11 +932,12 @@ export class EndWhiteSpace extends DiagramItem {
                 term.width *= 0.75;
                 term.format(x+18, y, 15).addTo(this);
             }
-        } else {
+        } else { // no changes - ex. observables 
             const horiz = new Path(x, y).h(50);
                 horiz.attrs.style = `stroke: gray;`;
                 horiz.addTo(this);
         }
+      // draws two line | |
       const vert1 = new Path(x, y - 10).v(20).addTo(this);
       const vert2 = new Path(x + 50, y - 10).v(20).addTo(this);
 
@@ -940,6 +945,24 @@ export class EndWhiteSpace extends DiagramItem {
       new Path(x + 20, y - 10).v(20).addTo(this);
     }
     return this;
+
+    /* old separator
+    export class EndWhiteSpace extends DiagramItem {
+    constructor(type = "simple") {
+        super("path");
+        this.type = type;
+        this.width = 50;
+        this.up = 10;
+        this.down = 10;
+        addDebug(this);
+    }
+    format(x, y, width) {
+    if (this.type === "simple") {
+      this.attrs["d"] = `M ${x} ${y - 10} v 20 M ${x + 10} ${y - 10} v 20`;
+    } else if (this.type === "complex")
+      this.attrs["d"] = `M ${x + 20} ${y - 10} v 20`;
+    }
+    */
   }
 
   textDiagram() {
