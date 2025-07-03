@@ -88,9 +88,9 @@ function compareComplexSeparation(expandedReactants, expandedProducts, arrow) {
 
 function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDict) {
     // send to function to compare + . changes
-    const complexChanges = compareComplexSeparation(expandedReactants, expandedProducts, arrow, molSiteDict);
+    const complexChanges = compareComplexSeparation(expandedReactants, expandedProducts, arrow);
 
-    expandedReactants = expandedReactants.replace(/ \+ /g, '.')
+    expandedReactants = expandedReactants.replace(/ \+ /g, '.');
     expandedProducts = expandedProducts.replace(/ \+ /g, '.');
     const changesDict = {};
     const rmolCounter = {};
