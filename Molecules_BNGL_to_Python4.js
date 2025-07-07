@@ -99,12 +99,6 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
                         stateName = splitState[0];
                         bondNum = splitState[1];
 
-                        if (states.length > 1 && stateIdx === states.length - 1 && bondNum === "?") {
-                            states[states.length - 1] = stateName;
-                            finStates.push(`new NonTerminal(\"${stateName}\", { box_color: \"${StateColor}\", bottom_bind: true, wrap: true })`);
-                            return;
-                        }
-
                         if (bondNum === "?") {
                             bondArg = ', bottom_bind: true, bottom_bind_color: \"gray\"';
                             bondNumArg = `, bond_num: \"${bondNum}\"`;

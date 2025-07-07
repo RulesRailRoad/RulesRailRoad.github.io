@@ -424,7 +424,7 @@ export class Diagram extends DiagramMultiContainer {
         for (const coords of Object.values(bond_coords)) {
             if (coords.length >= 2) {
                 const [[x1, y1], [x2, y2]] = coords;
-                const offset = Math.min(Math.max(Math.abs(y2 - y1), i * 10), i * 8)+45;
+                const offset = Math.min(Math.max(Math.abs(y2 - y1), i * 10), i * 8)+90;
                 const vert = parseFloat(this.attrs["height"]) / 6 + offset + i * 25;
                 const bottom_y = y1 + vert;
                 const dist_up = bottom_y - y2;
@@ -925,13 +925,13 @@ export class EndWhiteSpace extends DiagramItem {
                 // adds arrow depending on the change
                 let term = null;
                 if (this.changeType === "NonRevChangeComplex") {
-                    term = new NonTerminal("⬇", { box_color: "lightgray" });
+                    term = new NonTerminal("⬇", { box_color: "white", line_color: "white" });
                 } else if (this.changeType === "NonRevChangeSeparate"){
-                    term = new NonTerminal("⬆" , { box_color: "lightgray" });
+                    term = new NonTerminal("⬆" , { box_color: "white", line_color: "white" });
                 } else if (this.changeType === "RevChangeComplex") {
-                    term = new NonTerminal("⬇⬆", { box_color: "lightgray" });
+                    term = new NonTerminal("⬇⬆", { box_color: "white", line_color: "white" });
                 } else if (this.changeType === "RevChangeSeparate"){
-                    term = new NonTerminal("⬆⬇", { box_color: "lightgray" });
+                    term = new NonTerminal("⬆⬇", { box_color: "white", line_color: "white" });
                 }
                 term.width *= 0.75;
                 term.format(x+23, y, 15).addTo(this);
@@ -987,6 +987,8 @@ export class Terminal extends DiagramItem {
         title = null,
         cls = "",
         box_color = null,
+        line_color = null,
+        text_color = null,
         right_bind = false,
         bottom_bind = false,
         top_bind = false,
@@ -1004,6 +1006,8 @@ export class Terminal extends DiagramItem {
         this.title = title;
         this.cls = cls;
         this.box_color = box_color;
+        this.line_color = line_color;
+        this.text_color = text_color;
 
         this.right_bind = right_bind;
         this.right_bind_color = right_bind_color;
@@ -1081,8 +1085,6 @@ export class Terminal extends DiagramItem {
                 path2.attrs.style = style;
                 path2.addTo(this);
 
-                console.log("show_bond:", this.show_bond, "bond_type:", this.bond_type, "bond_num:", this.bond_num);
-
                 if (this.bond_num && this.bond_num !== "+") {
                     let cx = x + this.width / 2;
                     let cy = y + this.height + AR * 4;
@@ -1091,12 +1093,7 @@ export class Terminal extends DiagramItem {
                     if (this.bond_type === "circle") {
                         
                         if (this.show_bond || this.bond_num === "?" ) {
-                        const term = new NonTerminal(this.bond_num, { box_color: "white" });
-                        term.width *= 0.78;
-                        term.format(cx - term.width / 2, cy, term.width).addTo(this);
-                        cy += term.height / 2 + term.down;
-                        } else if (this.bond_num === "?") {
-                        const term = new NonTerminal(this.bond_num, { box_color: "white" });
+                        const term = new NonTerminal(this.bond_num, { box_color: "white", line_color: "gray", text_color: "gray" });
                         term.width *= 0.78;
                         term.format(cx - term.width / 2, cy, term.width).addTo(this);
                         cy += term.height / 2 + term.down;
@@ -1216,6 +1213,8 @@ export class NonTerminal extends DiagramItem {
         title = null,
         cls = "",
         box_color = null,
+        line_color = null,
+        text_color = null,
         right_bind = false,
         bottom_bind = false,
         top_bind = false,
@@ -1234,6 +1233,8 @@ export class NonTerminal extends DiagramItem {
         this.title = title;
         this.cls = cls;
         this.box_color = box_color;
+        this.text_color = text_color;
+        this.line_color = line_color;
 
         this.right_bind = right_bind;
         this.right_bind_color = right_bind_color;
@@ -1309,6 +1310,23 @@ export class NonTerminal extends DiagramItem {
                 const isUnknownBond = this.bond_num === "?";
                 const strokeStyle = isUnknownBond ? "stroke: gray; stroke-dasharray: 4,2" : "stroke: black";
 
+                if (isUnknownBond) {
+                const arc_start = x - AR;
+                const arc_height = AR * 1.5;
+                const path1 = new Path(arc_start, y - AR / 2)
+                    .down(arc_height*3.5).arc("ws").right(width / 2 - AR).arc("ne");
+                path1.attrs.class = "bottom-bind";
+                path1.attrs.style = "stroke: gray";
+                path1.addTo(this);
+
+                const path2 = new Path(x + AR + width, y - AR / 2)
+                    .down(arc_height*3.5).arc("es").left(width / 2 - AR).arc("nw");
+                path2.attrs.class = "bottom-bind";
+                path2.attrs.style = "stroke: gray";
+                path2.addTo(this);
+                this._bond_arc_bottom_y = y - AR /2 + arc_height * 3.5 + AR * 2;
+                } else {
+
                 const path1 = new Path(arc_start, y - AR / 2)
                     .down(arc_height*4).arc("ws").right(width / 2 - AR).arc("ne");
                 path1.attrs.class = "bottom-bind";
@@ -1321,7 +1339,7 @@ export class NonTerminal extends DiagramItem {
                 path2.attrs.style = strokeStyle;
                 path2.addTo(this);
                 this._bond_arc_bottom_y = y - AR /2 + arc_height * 4 + AR * 2;
-                }
+                }}
                 else {
                 const horiz_dist = width / 2 - AR;
                 const path1 = new Path(x, y + this.height)
@@ -1345,9 +1363,9 @@ export class NonTerminal extends DiagramItem {
                     if (this.bond_type === "circle") {
                         cx = x + width / 2;
                         cy = (this._bond_arc_bottom_y+8) || (y + this.height + AR * 4);
-                        
+
                         if (this.show_bond || this.bond_num === "?" ) {
-                        const term = new NonTerminal(this.bond_num, { box_color: "white" });
+                        const term = new NonTerminal(this.bond_num, { box_color: "white", line_color: "gray", text_color: "gray" });
                         term.width *= 0.78;
                         term.format(cx - term.width / 2, cy, term.width).addTo(this);
                         cy += term.height / 2 + term.down;
@@ -1400,8 +1418,10 @@ export class NonTerminal extends DiagramItem {
                     }
 
                     if (typeof bond_coords !== "undefined") {
+                        if (this.bond_num !== "?") {
                         bond_coords[this.bond_num] = bond_coords[this.bond_num] || [];
                         bond_coords[this.bond_num].push([cx, cy]);
+                        }
                     }
                 }
             }
@@ -1430,14 +1450,15 @@ export class NonTerminal extends DiagramItem {
         };
 
         if (this.box_color !== null) {
-            rect_attrs.style = `fill: ${this.box_color}`;
+            rect_attrs.style = `fill: ${this.box_color}; stroke: ${this.line_color || "black"}`;
         }
 
         new DiagramItem("rect", rect_attrs).addTo(this);
 
         const textElem = new DiagramItem("text", {
             x: x + leftGap + this.width / 2,
-            y: y + 4
+            y: y + 4,
+            fill: this.text_color || "black"
         }, this.text);
 
         if (this.href !== null) {
