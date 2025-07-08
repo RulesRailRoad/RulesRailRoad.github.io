@@ -336,11 +336,15 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
             }
             
             const display = `${r_display_str} ${arrow} ${p_display_str}`;
-            const {changes, complexChanges} = compareReactions(reactants_str, products_str, arrow, molSiteDict);
+            const {changes, complexChanges, synth_deg_changes} = compareReactions(reactants_str, products_str, arrow, molSiteDict);
     
             if (changes) {
             reactants_str = reactants_str.replace(/ \+ /g, '.');
-            output.push(bnglToRailroad(reactants_str, display, changes, molSiteDict, showBNGLString, showMolecules, showBondIndices, arrow, complexChanges));} 
+            output.push(bnglToRailroad(reactants_str, display, changes, molSiteDict, showBNGLString, showMolecules, showBondIndices, arrow, complexChanges, null));} 
+
+            if (synth_deg_changes) {
+            reactants_str = synth_deg_changes.fullReactionString;
+            output.push(bnglToRailroad(reactants_str, display, null, molSiteDict, showBNGLString, showMolecules, showBondIndices, arrow, complexChanges, synth_deg_changes));} 
         }
     } 
 

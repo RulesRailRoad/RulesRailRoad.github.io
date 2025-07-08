@@ -1,6 +1,6 @@
 // Molecules_BNGL_to_Python.js
 
-export function bnglToRailroad(bnglString, displayString = null, changesDict = null, molSiteDict = {}, showBNGLString, showMolecules, showBondIndices, arrow = null, complexChanges = null) {
+export function bnglToRailroad(bnglString, displayString = null, changesDict = null, molSiteDict = {}, showBNGLString, showMolecules, showBondIndices, arrow = null, complexChanges = null, synth_deg_changes = null) {
     if (!changesDict) changesDict = {};
     const MoleculeColor = 'lightgreen';
     const SiteColor = 'lightblue';
@@ -21,7 +21,13 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
     const RevChangeComplex = "RevChangeComplex";
     const RevChangeSeparate = "RevChangeSeparate";
 
-    const molChunks = bnglString.split('.');
+    console.log(bnglString);
+
+    let molChunks = bnglString.split('.');
+
+    const synthesized = synth_deg_changes?.synthesized || [];
+    const degraded = synth_deg_changes?.degraded || [];
+
     const label = showBNGLString ? (displayString || bnglString).trim() : " ";
     const diagrams = [
         `add("${label}",`,
@@ -31,6 +37,7 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
     const moleculeCounter = {};
 
     molChunks.forEach((chunk, idx) => {
+        const molSequence = [];
         const molMatch = chunk.trim().match(/(\w+)\((.*)\)/);
         if (!molMatch) {
             console.warn("BNGL string format is invalid:", chunk);
@@ -40,11 +47,28 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
         const [_, moleculeName, siteBlock] = molMatch;
         moleculeCounter[moleculeName] = (moleculeCounter[moleculeName] || 0) + 1;
         const moleculeInstance = `${moleculeName} #${moleculeCounter[moleculeName]}`;
-
-        const molCode = `        new Terminal(\"${moleculeName}\", { box_color: \"${MoleculeColor}\" }),`
-        showMolecules ? (diagrams.push(molCode)) : "";
+        
         if (siteBlock === "") {
-            return; // skip site processing
+            let molCode = `new Terminal("${moleculeName}", { box_color: "${MoleculeColor}" })`;
+
+            if (degraded.includes(moleculeName)) {
+                molCode = `new Group(${molCode}, "degraded")`;
+            }
+            if (synthesized.includes(moleculeName)) {
+                molCode = `new Group(${molCode}, "synthesized")`;
+            }
+
+            diagrams.push(`        ${molCode},`);
+
+            if (idx < molChunks.length - 1) {
+            if (complexChanges) {
+                const complexChange = complexChanges[idx];
+                diagrams.push(`        new EndWhiteSpace('${complexChange}'),`);
+            } else {
+                diagrams.push("        new EndWhiteSpace(),");
+            }
+        }
+            return;
         }
 
         const sites = siteBlock.split(',').map(s => s.trim()).filter(s => s);
@@ -163,7 +187,7 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
                 
                 const stateChoices = finStates.join(",\n        ");
                 const siteCode = `        new Sequence(new Choice(0,\n            new Terminal(\"${siteName}\", { box_color: \"${SiteColor}\" }),\n                ${stateChoices}\n                   )),`;
-                diagrams.push(siteCode);
+                molSequence.push(siteCode);
             } else {
                 if (siteName.includes("!")) {
                     const [name, bond] = siteName.split("!");
@@ -204,9 +228,25 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
                 }
 
                 const siteCode = `    new Sequence(new Terminal(\"${siteName}\", { box_color: \"${SiteColor}\"${bondArg}${bondNumArg}${bondTypeArg} })),`;
-                diagrams.push(siteCode);
+                molSequence.push(siteCode);
             }
         });
+
+        let fullMolecule = `new Sequence(\n${molSequence.join("\n")}\n    )`;
+
+        if (showMolecules) {
+            const molLabel = `new Terminal("${moleculeName}", { box_color: "${MoleculeColor}" })`;
+            molSequence.unshift(molLabel + ",");
+            fullMolecule = `new Sequence(\n${molSequence.join("\n")}\n    )`;
+        }
+        if (degraded.includes(moleculeName)) {
+            fullMolecule = `new Group(${fullMolecule}, "degraded" )`;
+        }
+        if (synthesized.includes(moleculeName)) {
+            fullMolecule = `new Group(${fullMolecule}, "synthesized")`;
+        }
+
+        diagrams.push(`        ${fullMolecule},`);
 
         if (idx < molChunks.length - 1) {
             if (complexChanges) {
@@ -217,8 +257,8 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
                 diagrams.push("        new EndWhiteSpace(),");
             }
         }
-    });
-
+        });
+        
     diagrams.push("    )\n)");
 
     return diagrams.join("\n") + "\n";

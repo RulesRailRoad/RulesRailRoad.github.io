@@ -811,6 +811,107 @@ export class MultipleChoice extends DiagramMultiContainer {
     }
 }
 
+
+export class Group extends DiagramItem {
+  constructor(item, label = null) {
+    super("g");
+    this.item = wrapString(item);
+
+    if (label instanceof DiagramItem) {
+      this.label = label;
+    } else if (label) {
+      this.label = new Comment(label);
+    } else {
+      this.label = null;
+    }
+
+    this.width = Math.max(
+        (this.item.width ?? 0) + (this.item.needsSpace ? 20 : 0),
+        this.label ? (this.label.width ?? 0) : 0,
+        AR * 2
+        );
+
+
+    this.height = this.item.height;
+    this.boxUp = Math.max(this.item.up + VS, AR);
+    this.up = this.boxUp;
+
+    if (this.label) {
+      this.up += this.label.up + this.label.height + this.label.down;
+    }
+
+    this.down = Math.max(this.item.down + VS, AR);
+    this.needsSpace = true;
+
+    addDebug(this);
+  }
+
+  format(x, y, width) {
+    const [leftGap, rightGap] = determineGaps(width, this.width);
+    new Path(x, y).h(leftGap).addTo(this);
+    new Path(x + leftGap + this.width, y + this.height).h(rightGap).addTo(this);
+    x += leftGap;
+
+    let style = "";
+    let labelColor = "";
+    if (this.label.text === "synthesized") {
+        style = `fill: none; stroke: mediumseagreen; stroke-dasharray: 10 5`;
+        labelColor = "green";
+    } else if (this.label.text === "degraded") {
+        style = `fill: none; stroke: indianred; stroke-dasharray: 10 5;`;
+        labelColor = "red";
+    }
+
+    const rect_attrs = {
+      x: x-45,
+      y: y - this.boxUp,
+      width: this.width +90,
+      height: (this.boxUp+15) + this.height + (this.down +15),
+      rx: AR,
+      ry: AR,
+      //style: style,
+      class: "group-box"
+    };
+
+    new DiagramItem("rect", rect_attrs).addTo(this);
+
+    this.item.format(x, y, this.width).addTo(this);
+
+    if (this.label) {
+        const labelElement =  this.label.format(
+            x-20,
+            y - (this.boxUp + this.label.down + this.label.height+5),
+            this.label.width
+        );
+        labelElement.attrs.fill = labelColor;
+        labelElement.addTo(this);
+        }
+
+    return this;
+  }
+
+  textDiagram() {
+    let diagramTD = TextDiagram.roundrect(this.item.textDiagram(), true);  // dashed = true
+    if (this.label) {
+      const labelTD = this.label.textDiagram();
+      diagramTD = labelTD
+        .appendBelow(diagramTD, [], true, true)
+        .expand(0, 0, 1, 0);
+    }
+    return diagramTD;
+  }
+
+  walk(cb) {
+    cb(this);
+    this.item.walk(cb);
+    if (this.label) this.label.walk(cb);
+  }
+
+  toString() {
+    return `Group(${this.item.toString()}, label=${this.label ? this.label.toString() : "null"})`;
+  }
+}
+
 export class Start extends DiagramItem {
   constructor(type = "simple", label = null) {
     super("g");
@@ -825,9 +926,10 @@ export class Start extends DiagramItem {
   format(x, y, width) {
     const path = new Path(x, y - 10);
     if (this.type === "complex") {
-      path.down(20).m(0, -10).right(this.width).addTo(this);
+        path.down(20).m(10, -20).down(20).m(-10, -10).right(this.width).addTo(this);
     } else {
-      path.down(20).m(10, -20).down(20).m(-10, -10).right(this.width).addTo(this);
+        path.down(20).m(0, -10).right(this.width).addTo(this);
+      
     }
     if (this.label) {
       new DiagramItem("text", {
@@ -861,9 +963,9 @@ export class End extends DiagramItem {
 
   format(x, y, width) {
     if (this.type === "simple") {
-      this.attrs["d"] = `M ${x} ${y} h 20 m -10 -10 v 20 m 10 -20 v 20`;
-    } else if (this.type === "complex") {
       this.attrs["d"] = `M ${x} ${y} h 20 m 0 -10 v 20`;
+    } else if (this.type === "complex") {
+      this.attrs["d"] = `M ${x} ${y} h 20 m -10 -10 v 20 m 10 -20 v 20`;
     }
     return this;
   }
@@ -900,7 +1002,7 @@ export class EndWhiteSpace extends DiagramItem {
     super("g");
     this.type = type;
     this.changeType = changeType;
-    this.width = 60; // space between two | |
+    this.width = 100; // space between two | |
     this.up = 10;
     this.down = 10;
     addDebug(this);
@@ -911,7 +1013,7 @@ export class EndWhiteSpace extends DiagramItem {
         if (this.changeType) {
             // separator for no changes
             if (this.changeType === "NoChangeComplex" || this.changeType === "NoChangeSeparate") {
-                const horiz = new Path(x, y).h(60);
+                const horiz = new Path(x, y).h(100);
                 horiz.attrs.style = `stroke: gray; stroke-dasharray: 4,2`; // . to .
                 if (this.changeType === "NoChangeSeparate") {
                     horiz.attrs.style = `stroke: white;`; // + to +
@@ -919,7 +1021,7 @@ export class EndWhiteSpace extends DiagramItem {
                 horiz.addTo(this);
             } else { // separator for reversible and nonreversible changes
                 // draws connecting gray line
-                const horiz1 = new Path(x, y).h(60);
+                const horiz1 = new Path(x, y).h(100);
                     horiz1.attrs.style = `stroke: gray; stroke-dasharray: 4,2`;
                     horiz1.addTo(this);
                 // adds arrow depending on the change
@@ -934,16 +1036,16 @@ export class EndWhiteSpace extends DiagramItem {
                     term = new NonTerminal("⬆⬇", { box_color: "white", line_color: "white" });
                 }
                 term.width *= 0.75;
-                term.format(x+23, y, 15).addTo(this);
+                term.format(x+40, y, 15).addTo(this);
             }
         } else { // no changes - ex. observables 
-            const horiz = new Path(x, y).h(60);
+            const horiz = new Path(x, y).h(100);
                 horiz.attrs.style = `stroke: gray; stroke-dasharray: 4,2`;
                 horiz.addTo(this);
         }
       // draws two line | |
       const vert1 = new Path(x, y - 10).v(20).addTo(this);
-      const vert2 = new Path(x + 60, y - 10).v(20).addTo(this);
+      const vert2 = new Path(x + 100, y - 10).v(20).addTo(this);
 
     } else if (this.type === "complex") {
       new Path(x + 20, y - 10).v(20).addTo(this);
@@ -1093,7 +1195,7 @@ export class Terminal extends DiagramItem {
                     if (this.bond_type === "circle") {
                         
                         if (this.show_bond || this.bond_num === "?" ) {
-                        const term = new NonTerminal(this.bond_num, { box_color: "white", line_color: "gray", text_color: "gray" });
+                        const term = new NonTerminal(this.bond_num, { box_color: "white", line_color: "white", text_color: "gray" });
                         term.width *= 0.78;
                         term.format(cx - term.width / 2, cy, term.width).addTo(this);
                         cy += term.height / 2 + term.down;
@@ -1311,34 +1413,40 @@ export class NonTerminal extends DiagramItem {
                 const strokeStyle = isUnknownBond ? "stroke: gray; stroke-dasharray: 4,2" : "stroke: black";
 
                 if (isUnknownBond) {
-                const arc_start = x - AR;
-                const arc_height = AR * 1.5;
-                const path1 = new Path(arc_start, y - AR / 2)
-                    .down(arc_height*3.5).arc("ws").right(width / 2 - AR).arc("ne");
-                path1.attrs.class = "bottom-bind";
-                path1.attrs.style = "stroke: gray";
-                path1.addTo(this);
+                    const horiz_dist = width / 2 - AR;
+                    const path1 = new Path(x, y + VS*3)
+                        .arc("nw").arc("ws").right(horiz_dist).arc("ne").down(this.height);
 
-                const path2 = new Path(x + AR + width, y - AR / 2)
-                    .down(arc_height*3.5).arc("es").left(width / 2 - AR).arc("nw");
-                path2.attrs.class = "bottom-bind";
-                path2.attrs.style = "stroke: gray";
-                path2.addTo(this);
-                this._bond_arc_bottom_y = y - AR /2 + arc_height * 3.5 + AR * 2;
+                    const style = `stroke: ${this.bottom_bind_color}`
+
+                    path1.attrs.class = "bottom-bind";
+                    path1.attrs.style = style;
+                    path1.addTo(this);
+
+                    const path2 = new Path(x + width, y + VS*3)
+                        .arc("ne").arc("es").left(horiz_dist).arc("nw").down(this.height);
+                    path2.attrs.class = "bottom-bind";
+                    path2.attrs.style = style;
+                    path2.addTo(this);
+                    this._bond_arc_bottom_y = y - AR /2 + arc_height * 4 + AR * 2;
                 } else {
 
-                const path1 = new Path(arc_start, y - AR / 2)
-                    .down(arc_height*4).arc("ws").right(width / 2 - AR).arc("ne");
+                const horiz_dist = width / 2 - AR;
+                const path1 = new Path(x, y + this.height+VS*3)
+                    .arc("nw").arc("ws").right(horiz_dist).arc("ne").down(this.height);
+
+                const style = `stroke: ${this.bottom_bind_color}`
+
                 path1.attrs.class = "bottom-bind";
-                path1.attrs.style = strokeStyle;
+                path1.attrs.style = style;
                 path1.addTo(this);
 
-                const path2 = new Path(x + AR + width, y - AR / 2)
-                    .down(arc_height*4).arc("es").left(width / 2 - AR).arc("nw");
+                const path2 = new Path(x + width, y + this.height+VS*3)
+                    .arc("ne").arc("es").left(horiz_dist).arc("nw").down(this.height);
                 path2.attrs.class = "bottom-bind";
-                path2.attrs.style = strokeStyle;
+                path2.attrs.style = style;
                 path2.addTo(this);
-                this._bond_arc_bottom_y = y - AR /2 + arc_height * 4 + AR * 2;
+                this._bond_arc_bottom_y = y - AR /2 + arc_height * 4 + AR * 3;
                 }}
                 else {
                 const horiz_dist = width / 2 - AR;
@@ -1365,7 +1473,7 @@ export class NonTerminal extends DiagramItem {
                         cy = (this._bond_arc_bottom_y+8) || (y + this.height + AR * 4);
 
                         if (this.show_bond || this.bond_num === "?" ) {
-                        const term = new NonTerminal(this.bond_num, { box_color: "white", line_color: "gray", text_color: "gray" });
+                        const term = new NonTerminal(this.bond_num, { box_color: "white", line_color: "white", text_color: "gray" });
                         term.width *= 0.78;
                         term.format(cx - term.width / 2, cy, term.width).addTo(this);
                         cy += term.height / 2 + term.down;
