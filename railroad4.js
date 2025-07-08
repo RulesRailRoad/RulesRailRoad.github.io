@@ -1195,7 +1195,10 @@ export class Terminal extends DiagramItem {
                     if (this.bond_type === "circle") {
                         
                         if (this.show_bond || this.bond_num === "?" ) {
-                        const term = new NonTerminal(this.bond_num, { box_color: "white", line_color: "white", text_color: "gray" });
+                        let term = new NonTerminal(this.bond_num, { box_color: "white" });
+                        if (this.bond_num === "?") {
+                            term = new NonTerminal(this.bond_num, { box_color: "white", line_color: "white", text_color: "gray" });
+                        }
                         term.width *= 0.78;
                         term.format(cx - term.width / 2, cy, term.width).addTo(this);
                         cy += term.height / 2 + term.down;
@@ -1473,7 +1476,11 @@ export class NonTerminal extends DiagramItem {
                         cy = (this._bond_arc_bottom_y+8) || (y + this.height + AR * 4);
 
                         if (this.show_bond || this.bond_num === "?" ) {
-                        const term = new NonTerminal(this.bond_num, { box_color: "white", line_color: "white", text_color: "gray" });
+                        let term = new NonTerminal(this.bond_num, { box_color: "white" });
+
+                        if (this.bond_num === "?") {
+                            term = new NonTerminal(this.bond_num, { box_color: "white", line_color: "white", text_color: "gray" });
+                        }
                         term.width *= 0.78;
                         term.format(cx - term.width / 2, cy, term.width).addTo(this);
                         cy += term.height / 2 + term.down;
