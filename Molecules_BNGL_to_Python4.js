@@ -21,8 +21,6 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
     const RevChangeComplex = "RevChangeComplex";
     const RevChangeSeparate = "RevChangeSeparate";
 
-    console.log(bnglString);
-
     let molChunks = bnglString.split('.');
 
     const synthesized = synth_deg_changes?.synthesized || [];
