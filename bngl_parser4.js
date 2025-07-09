@@ -75,7 +75,7 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
 
     let lastComment = null
 
-    const moleculeLines = getBlockFlexible(["begin molecule types", "begin molecules"], ["end molecule types", "end molecules"]);
+    const moleculeLines = getBlockFlexible(["begin molecule types", "begin molecule"], ["end molecule types", "end molecule"]);
     const molSiteDict = moleculeSiteDict(moleculeLines);
     const moleculesLabel = useBNGL ? "Molecules" : "Interacting Agents";
     output.push(
@@ -89,6 +89,7 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
             if (line.startsWith('#')) {
                 lastComment = line.slice(1).trim();
                 if (showComments) {
+                    output.push('document.getElementById("diagramArea").appendChild(document.createElement("br"));');
                     output.push(
                     'document.getElementById("diagramArea").appendChild(' +
                         `Object.assign(document.createElement("small"), { textContent: ${JSON.stringify(lastComment)} })` +
@@ -122,6 +123,7 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
             if (line.startsWith('#')) {
                 lastComment = line.slice(1).trim();
                 if (showComments) {
+                    output.push('document.getElementById("diagramArea").appendChild(document.createElement("br"));');
                     output.push(
                     'document.getElementById("diagramArea").appendChild(' +
                         `Object.assign(document.createElement("small"), { textContent: ${JSON.stringify(lastComment)} })` +
@@ -155,6 +157,7 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
             if (line.startsWith('#')) {
                 lastComment = line.slice(1).trim();
                 if (showComments) {
+                    output.push('document.getElementById("diagramArea").appendChild(document.createElement("br"));');
                     output.push(
                     'document.getElementById("diagramArea").appendChild(' +
                         `Object.assign(document.createElement("small"), { textContent: ${JSON.stringify(lastComment)} })` +
@@ -203,6 +206,7 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
             if (line.startsWith('#')) {
                 lastComment = line.slice(1).trim();
                 if (showComments) {
+                    output.push('document.getElementById("diagramArea").appendChild(document.createElement("br"));');
                     output.push(
                     'document.getElementById("diagramArea").appendChild(' +
                         `Object.assign(document.createElement("small"), { textContent: ${JSON.stringify(lastComment)} })` +
@@ -332,19 +336,35 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
 
             if (!products_str.includes('(') || !reactants_str.includes('(')) {
                 console.warn("⚠️ Skipping malformed reaction:", r_display_str, arrow, p_display_str);
+                output.push('document.getElementById("diagramArea").appendChild(document.createElement("br"));');
+                output.push(
+                'document.getElementById("diagramArea").appendChild(' +
+                `Object.assign(document.createElement("small"), { textContent: ${JSON.stringify("⚠️ Skipping malformed reaction: " + r_display_str + " " + arrow + " " + p_display_str)} })` +
+                ');'
+                );
                 continue;
             }
-            
+
             const display = `${r_display_str} ${arrow} ${p_display_str}`;
-            const {changes, complexChanges, synth_deg_changes} = compareReactions(reactants_str, products_str, arrow, molSiteDict);
+            const {changes, complexChanges, synth_deg_changes, outputErrors} = compareReactions(reactants_str, products_str, arrow, molSiteDict);
+            output.push(outputErrors.join('\n'));
+
+            if (synth_deg_changes && changes) {
+            if (synth_deg_changes.fullReactionString) {
+                reactants_str = synth_deg_changes.fullReactionString;
+            } else {
+                reactants_str = reactants_str.replace(/ \+ /g, '.');
+            }
+            output.push(bnglToRailroad(reactants_str, display, changes, molSiteDict, showBNGLString, showMolecules, showBondIndices, arrow, complexChanges, synth_deg_changes));} 
     
-            if (changes) {
+            else {if (changes) {
             reactants_str = reactants_str.replace(/ \+ /g, '.');
             output.push(bnglToRailroad(reactants_str, display, changes, molSiteDict, showBNGLString, showMolecules, showBondIndices, arrow, complexChanges, null));} 
 
             if (synth_deg_changes) {
             reactants_str = synth_deg_changes.fullReactionString;
             output.push(bnglToRailroad(reactants_str, display, null, molSiteDict, showBNGLString, showMolecules, showBondIndices, arrow, complexChanges, synth_deg_changes));} 
+            }
         }
     } 
 
