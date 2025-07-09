@@ -55,7 +55,6 @@ function compareComplexSeparation(expandedReactants, expandedProducts, arrow) {
     const productOrder = extractGroupOrder(expandedProducts);
 
     if (reactantOrder.length !== productOrder.length) {
-        //console.warn("Mismatched reaction order — skipping reaction comparison.");
         return;
     }
 
@@ -88,8 +87,17 @@ function compareComplexSeparation(expandedReactants, expandedProducts, arrow) {
 
 
 function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDict) {
+    // Determine which molecules have repeated site names
+    const duplicateSiteTrackers = {};
+    for (const mol of Object.keys(molSiteDict)) {
+        duplicateSiteTrackers[mol] = getDuplicateSiteNameMap(molSiteDict[mol] || []);
+    }
+
+
+    const output = [];
     // send to function to compare + . changes
     const complexChanges = compareComplexSeparation(expandedReactants, expandedProducts, arrow);
+    let complex_changes = [];
 
     const replaced_expandedReactants = expandedReactants.replace(/ \+ /g, '.');
     const replaced_expandedProducts = expandedProducts.replace(/ \+ /g, '.');
@@ -98,8 +106,8 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
     const rmolCounter = {};
     const pmolCounter = {};
 
-    const reactantParts = replaced_expandedReactants.split(".");
-    const productParts = replaced_expandedProducts.split(".");
+    let reactantParts = replaced_expandedReactants.split(".");
+    let productParts = replaced_expandedProducts.split(".");
 
     // Check if the molecule order matches
     const reactantOrder = reactantParts.map(p => p.trim().split("(")[0]);
@@ -113,21 +121,8 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
 
         let fullReactionString;
 
-        if ((degraded.length > 0 && synthesized.length === 0) || (synthesized.length > 0 && degraded.length === 0) 
-            || (degraded.length > 0 && synthesized.length > 0)) {
-            const seen = new Set();
-            const uniqueParts = [];
-
-            for (const part of [...reactantParts, ...productParts]) {
-                const molName = part.trim().split("(")[0];
-                if (!seen.has(molName)) {
-                    seen.add(molName);
-                    uniqueParts.push(part);
-                }
-            }
-            fullReactionString = uniqueParts.join(".");
-
-        } else {
+        if (!((degraded.length > 0 && synthesized.length === 0) || (synthesized.length > 0 && degraded.length === 0) 
+            || (degraded.length > 0 && synthesized.length > 0))) {
             // No synthesis or degradation — compare molecule names
             const leftMolNames = reactantParts.map(p => p.trim().split("(")[0]).sort();
             const rightMolNames = productParts.map(p => p.trim().split("(")[0]).sort();
@@ -142,7 +137,15 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
 
             if (sameMolecules && !sameOrder) {
                 // Same molecules, different order — skip
-                return { changes: null, complexChanges: null, synth_deg_changes: null };
+                output.push('document.getElementById("diagramArea").appendChild(document.createElement("br"));');
+                output.push(
+                'document.getElementById("diagramArea").appendChild(' +
+                `Object.assign(document.createElement("small"), { textContent: ${JSON.stringify(
+                    "⚠️ Molecule order mismatch - skipping reaction: reactants: " + reactantOrder.join(", ") + " products: " + productOrder.join(", ")
+                )} })` +
+                ');'
+                );
+                return { changes: null, complexChanges: null, synth_deg_changes: null, outputErrors: output};
             }
         }
 
@@ -166,145 +169,147 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
 
         const normalizedReactants = [];
         const normalizedProducts = [];
+        const reactantDelimiters = [];
+        const productDelimiters = [];
 
-        for (const name of allNames) {
-            const r = reactantMap.get(name);
-            const p = productMap.get(name);
+        const originalReactantDelimiters = extractGroupOrder(expandedReactants);
+        const originalProductDelimiters = extractGroupOrder(expandedProducts);
 
-            if (r && p) {
-                normalizedReactants.push(r);
-                normalizedProducts.push(p);
-            } else if (r) { // degraded
-                normalizedReactants.push(r);
-                normalizedProducts.push(r); 
-            } else if (p) { // synthesized
-                normalizedReactants.push(p); 
-                normalizedProducts.push(p);
-            }
+        const reactantDelimMap = {};
+        const productDelimMap = {};
+        for (let i = 0; i < reactantParts.length - 1; i++) {
+            const name = reactantParts[i].split("(")[0].trim();
+            reactantDelimMap[name] = originalReactantDelimiters[i];
+        }
+        for (let i = 0; i < productParts.length - 1; i++) {
+            const name = productParts[i].split("(")[0].trim();
+            productDelimMap[name] = originalProductDelimiters[i];
         }
 
-        fullReactionString = normalizedReactants.join(".")  // both sides now the same
-        const fullProductString = normalizedProducts.join(".")
 
-        const originalReactants = expandedReactants.trim();
-        const originalProducts = expandedProducts.trim();
-
-        // Insert synthesized molecules into the original reactants using '+'
-        const synthGroups = synthesized.map(name => {
-            return productMap.get(name) || name;
-        });
-        const augmentedReactants = originalReactants + (synthGroups.length > 0 ? " + " + synthGroups.join(" + ") : "");
-
-        // Insert degraded molecules into the original products using '+'
-        const degrGroups = degraded.map(name => {
-            return reactantMap.get(name) || name;
-        });
-        const augmentedProducts = originalProducts + (degrGroups.length > 0 ? " + " + degrGroups.join(" + ") : "");
-
-        const complexChanges = compareComplexSeparation(augmentedReactants, augmentedProducts, arrow);
-
-        if (
-            synthesized.length > 0 &&
-            degraded.length === 0 &&
-            productOrder.length > 1 &&
-            synthesized.includes(productOrder[0])
-        ) {
-            const seen = new Set();
-            const allNames = [];
-
-            // Preserve product order first
-            for (const name of productOrder) {
-                if (!seen.has(name)) {
-                    seen.add(name);
-                    allNames.push(name);
-                }
-            }
-            for (const name of reactantOrder) {
-                if (!seen.has(name)) {
-                    seen.add(name);
-                    allNames.push(name);
-                }
-            }
-
-            const reactantDelimiters = extractGroupOrder(expandedReactants);
-            const productDelimiters = extractGroupOrder(expandedProducts);
-
-
-            const finalReactants = [];
-            const finalProducts = [];
-            const finalReactantDelimiters = [];
-            const finalProductDelimiters = [];
-
-            for (const name of allNames) {
+        if (synthesized.length > 0 && degraded.length === 0) {
+            // Use productParts as reference
+            let rIdx = 0;
+            for (let i = 0; i < productParts.length; i++) {
+                const product = productParts[i];
+                const name = product.split("(")[0].trim();
                 const r = reactantMap.get(name);
+
+                normalizedProducts.push(product);
+                if (r) {
+                    normalizedReactants.push(r);
+                    reactantDelimiters.push(reactantDelimMap[name] ?? "+");
+                } else {
+                    normalizedReactants.push(product); // synthesized
+                    reactantDelimiters.push(reactantDelimMap[name] ?? "+");
+                }
+
+                productDelimiters.push(originalProductDelimiters[i] ?? "+");
+            }
+
+            for (const reactant of reactantParts) {
+                const name = reactant.split("(")[0].trim();
+                if (!productMap.has(name)) {
+                    normalizedReactants.push(reactant);  // degraded
+                    normalizedProducts.push(reactant);
+                    reactantDelimiters.push(reactantDelimMap[name] ?? "+");
+                    productDelimiters.push(productDelimMap[name] ?? "+");
+                }
+            }
+
+        } else {
+            // Use reactantParts as reference
+            let pIdx = 0;
+            for (let i = 0; i < reactantParts.length; i++) {
+                const reactant = reactantParts[i];
+                const name = reactant.split("(")[0].trim();
                 const p = productMap.get(name);
 
-                if (r && p) {
-                    finalReactants.push(r);
-                    finalProducts.push(p);
+                normalizedReactants.push(reactant);
+                reactantDelimiters.push(reactantDelimMap[name] ?? "+");
 
-                    // Get original delimiters by finding index in original molecule order
-                    const rIndex = reactantOrder.indexOf(name);
-                    const pIndex = productOrder.indexOf(name);
-
-                    finalReactantDelimiters.push(reactantDelimiters[rIndex] || '+');
-                    finalProductDelimiters.push(productDelimiters[pIndex] || '+');
-                } else if (r) { // degraded
-                    finalReactants.push(r);
-                    finalProducts.push(r);
-                    finalReactantDelimiters.push('+');
-                    finalProductDelimiters.push('+');
-                } else if (p) { // synthesized
-                    finalReactants.push(p);
-                    finalProducts.push(p);
-                    finalReactantDelimiters.push('+');
-                    finalProductDelimiters.push('+');
-                }
+                normalizedProducts.push(p ? p : reactant);
+                productDelimiters.push(productDelimMap[name] ?? "+");
             }
 
-            function interleave(parts, delimiters) {
-                const result = [parts[0]];
-                for (let i = 1; i < parts.length; i++) {
-                    result.push(` ${delimiters[i - 1]} `);
-                    result.push(parts[i]);
+            for (const product of productParts) {
+                const name = product.split("(")[0].trim();
+                if (!reactantMap.has(name)) {
+                    normalizedProducts.push(product);  // synthesized
+                    normalizedReactants.push(product);
+                    reactantDelimiters.push(reactantDelimMap[name] ?? "+");
+                    productDelimiters.push(productDelimMap[name] ?? "+");
                 }
-                return result.join('');
             }
-
-            const insertedReactionString = interleave(finalReactants, finalReactantDelimiters);
-            const insertedProductString = interleave(finalProducts, finalProductDelimiters);
-
-            const complexChanges = compareComplexSeparation(insertedReactionString, insertedProductString, arrow);
-
-
-
-            synth_deg_changesDict = {
-                reactants: reactantOrder,
-                products: productOrder,
-                synthesized: synthesized,
-                degraded: degraded,
-                fullReactionString: insertedReactionString.replace(" + ", ".")
-            };
-
-            return {
-                changes: null,
-                complexChanges,
-                synth_deg_changes: synth_deg_changesDict
-            };
         }
 
+        for (let i = 0; i < reactantDelimiters.length; i++) {
+        if (reactantDelimiters[i] === productDelimiters[i]) {
+            if (reactantDelimiters[i] === "+") {
+                complex_changes.push(NoChangeSeparate);
+            } else {
+                complex_changes.push(NoChangeComplex);
+            }
+        } else {
+            if (reactantDelimiters[i] === "+") {
+                if (arrow === "->") {
+                    complex_changes.push(NonRevChangeComplex);
+                } else {
+                    complex_changes.push(RevChangeComplex);
+                }
+            } else {
+                if (arrow === "->") {
+                    complex_changes.push(NonRevChangeSeparate);
+                } else {
+                    complex_changes.push(RevChangeSeparate);
+                }
+            }
+        }
+    }
+
+        fullReactionString = normalizedReactants.join(".");
+
         synth_deg_changesDict = {
-                reactants: reactantOrder,
-                products: productOrder,
                 synthesized: synthesized,
                 degraded: degraded,
                 fullReactionString: fullReactionString
         }
 
-        return { changes: null, complexChanges: complexChanges, synth_deg_changes: synth_deg_changesDict }; // return + . changes
+        // After normalization, proceed with standard site/bond change detection
+        reactantParts = normalizedReactants;
+        productParts = normalizedProducts;   
+
+
+        for (const part of reactantParts) {
+            const molName = part.split("(")[0].trim();
+            if (!degraded.includes(molName)) continue;
+
+            const siteBlock = part.match(/\((.*?)\)/)?.[1];
+            if (!siteBlock) continue;
+
+            const sites = siteBlock.split(",");
+            for (const site of sites) {
+                const bondMatch = site.match(/!(\d+)/);
+                if (bondMatch) {
+                    const siteName = site.split("~")[0].split("!")[0];
+                    const molLabel = `${molName} #${rmolCounter[molName] || 1}`;  // fallback to #1 if counter hasn't run yet
+
+                    const siteKey = duplicateSiteTrackers[molName]?.[siteName]
+                        ? `${molLabel}:${siteName}[0]`
+                        : `${molLabel}:${siteName}`;
+
+                    changesDict[siteKey] = {
+                        molecule: molLabel,
+                        site: siteName,
+                        reactant: site,
+                        product: site.split("!")[0] + "!-",
+                        change: [bondRemovedNonRev],
+                    };
+                }
+            }
+        }
     }
-
-
+    
     const allRsites = [];
     for (const part of reactantParts) {
         const rmol = part.split("(")[0];
@@ -343,17 +348,10 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
 
     }
 
-    // Determine which molecules have repeated site names
-    const duplicateSiteTrackers = {};
-    for (const mol of Object.keys(molSiteDict)) {
-        duplicateSiteTrackers[mol] = getDuplicateSiteNameMap(molSiteDict[mol] || []);
-    }
-
     if (!allRsites || !allPsites || allRsites.length !== allPsites.length) {
     console.error("Skipping reaction comparison due to mismatched reactants and products.", 
                   "Reactants:", allRsites, "Products:", allPsites);
-    return { changes: null, complexChanges: null }; // return + . changes
-}
+    }
     for (let i = 0; i < allRsites.length; i++) {
         const [rmol, rRaw, rsite, rIndex] = allRsites[i];
         const [pmol, pRaw, psite, pIndex] = allPsites[i];
@@ -439,9 +437,19 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
             };
         }
     }
+
+    let useThisComplexChanges;   
+    if (synth_deg_changesDict.fullReactionString) {
+        useThisComplexChanges = complex_changes;
+    } else {
+        useThisComplexChanges = complexChanges;
+    }
+
     return {
         changes: changesDict,
-        complexChanges: complexChanges // return + . changes
+        complexChanges: useThisComplexChanges,
+        synth_deg_changes: synth_deg_changesDict,
+        outputErrors: output // return + . changes
     };
 }
 
