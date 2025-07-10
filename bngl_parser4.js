@@ -46,6 +46,29 @@ function MalformedMolecules(line) {
     return newline;
 }
 
+function stripAfterLastValidMolecule(fullStr, molSiteDict) {
+    let lastValidCloseIdx = -1;
+
+    // Regular expression to find every (...) and the name before it
+    const regex = /([A-Za-z_][\w]*)\s*\(([^()]*)\)/g;
+    let match;
+
+    while ((match = regex.exec(fullStr)) !== null) {
+        const [wholeMatch, molName] = match;
+        const closeIdx = regex.lastIndex;  // index right after the closing ')'
+
+        if (molSiteDict.hasOwnProperty(molName)) {
+            lastValidCloseIdx = closeIdx;  // store the last valid molecule’s closing paren index
+        }
+    }
+
+    // If valid molecule found, slice up to its closing ')'
+    if (lastValidCloseIdx !== -1) {
+        return fullStr.slice(0, lastValidCloseIdx);
+    }
+    return fullStr;  // fallback: return original
+}
+
 export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLString, showMolecules, showBondIndices) {
     const lines = joinLines(fileText.split(/\r?\n/).map(l => l.trim()));
     const output = [];
@@ -322,8 +345,12 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
                 }
                 const endIdx = part.lastIndexOf(")");
                 if (endIdx !== -1) {
-                    part = part.slice(0, endIdx + 1);
+                    const moleculeName = part.slice(0, part.indexOf('(')).trim();
+                    if (molSiteDict.hasOwnProperty(moleculeName)) {
+                        part = part.slice(0, endIdx + 1);
+                    }
                 }
+                part = stripAfterLastValidMolecule(part, molSiteDict);
                 if (part.includes(':')) {
                     part = part.split(':')[1];
                 }
@@ -332,9 +359,20 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
                 stripped_p.push(expandedRHS);
             }
             products_str = stripped_p.join(' + ');
+            products_str = stripAfterLastValidMolecule(products_str, molSiteDict);
             p_display_str = display_p.join(' + ');
+            p_display_str = stripAfterLastValidMolecule(p_display_str, molSiteDict);
+
+            let arrow_and_products = arrow + products_str;
+            if (arrow_and_products.includes("-> 0") || arrow_and_products.includes("->0")) {
+                products_str = "0"
+                p_display_str = "0"
+            }
 
             if (!products_str.includes('(') || !reactants_str.includes('(')) {
+                if (!r_display_str) {
+                    r_display_str = "0"
+                }
                 console.warn("⚠️ Skipping malformed reaction:", r_display_str, arrow, p_display_str);
                 output.push('document.getElementById("diagramArea").appendChild(document.createElement("br"));');
                 output.push(
