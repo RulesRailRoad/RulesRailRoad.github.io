@@ -24,7 +24,9 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
     let molChunks = bnglString.split('.');
 
     const synthesized = synth_deg_changes?.synthesized || [];
+    const dup_synthesized = synth_deg_changes?.dup_synthesized || [];    
     const degraded = synth_deg_changes?.degraded || [];
+    const dup_degraded = synth_deg_changes?.dup_degraded || [];
 
     const label = showBNGLString ? (displayString || bnglString).trim() : " ";
     const diagrams = [
@@ -45,12 +47,21 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
         const [_, moleculeName, siteBlock] = molMatch;
         moleculeCounter[moleculeName] = (moleculeCounter[moleculeName] || 0) + 1;
         const moleculeInstance = `${moleculeName} #${moleculeCounter[moleculeName]}`;
+
+        const isSynthesized = dup_synthesized?.some(s => s.name === moleculeName && s.index === idx);
+        const isDegraded = dup_degraded?.some(s => s.name === moleculeName && s.index === idx);
         
         if (siteBlock === "") {
             let molCode = `new Terminal("${moleculeName}", { box_color: "${MoleculeColor}" })`;
 
+            if (isDegraded) {
+                molCode = `new Group(${molCode}, "degraded")`;
+            }
             if (degraded.includes(moleculeName)) {
                 molCode = `new Group(${molCode}, "degraded")`;
+            }
+            if (isSynthesized) {
+                molCode = `new Group(${molCode}, "synthesized")`;
             }
             if (synthesized.includes(moleculeName)) {
                 molCode = `new Group(${molCode}, "synthesized")`;
@@ -240,7 +251,13 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
         if (degraded.includes(moleculeName)) {
             fullMolecule = `new Group(${fullMolecule}, "degraded" )`;
         }
+        if (isDegraded) {
+            fullMolecule = `new Group(${fullMolecule}, "degraded" )`;
+        }
         if (synthesized.includes(moleculeName)) {
+            fullMolecule = `new Group(${fullMolecule}, "synthesized")`;
+        }
+        if (isSynthesized) {
             fullMolecule = `new Group(${fullMolecule}, "synthesized")`;
         }
 

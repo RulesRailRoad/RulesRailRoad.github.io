@@ -116,34 +116,8 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
     if (reactantOrder.join(",") !== productOrder.join(",")) {
         console.warn("Molecule order mismatch", "reactants:", reactantOrder, "products:", productOrder);
 
-        //const synthesized = productOrder.filter(p => !reactantOrder.includes(p));
+        const synthesized = productOrder.filter(p => !reactantOrder.includes(p));
         const degraded = reactantOrder.filter(p => !productOrder.includes(p));
-
-        const synthesized = [];
-        //const degraded = [];
-
-        const matched = new Array(productParts.length).fill(false);
-
-        // Step 1: Try to match reactants in order to products
-        let rIdx = 0;
-        for (let pIdx = 0; pIdx < productParts.length && rIdx < reactantParts.length; pIdx++) {
-            if (productParts[pIdx] === reactantParts[rIdx]) {
-                matched[pIdx] = true;
-                rIdx++;
-            }
-        }
-
-        // Step 2: Any unmatched product molecule is a synthesis candidate
-        for (let i = 0; i < productParts.length; i++) {
-            if (!matched[i]) {
-                const pname = productParts[i].split("(")[0].trim();
-                // Optional: look at productParts[i-1] or [i+1] to context-check
-                synthesized.push({ name: pname, index: i });
-            }
-        }
-
-        console.log(synthesized);
-        console.log(degraded);
 
         let fullReactionString;
 
@@ -175,12 +149,66 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
             }
         }
 
+        const reactantNameCounts = {};
+        for (const r of reactantParts) {
+            const name = r.split("(")[0].trim();
+            reactantNameCounts[name] = (reactantNameCounts[name] || 0) + 1;
+        }
+
+        const productNameCounts = {};
+        for (const p of productParts) {
+            const name = p.split("(")[0].trim();
+            productNameCounts[name] = (productNameCounts[name] || 0) + 1;
+        }
+
+        // Only run neighbor context check if any molecule has duplicates on both sides
+        const hasDuplicateOnBothSides = Object.keys(reactantNameCounts).some(name =>
+            (reactantNameCounts[name] > 1 && productNameCounts[name] === 1) ||
+            (productNameCounts[name] > 1 && reactantNameCounts[name] === 1)
+        );
+
+        let dup_synthesized = [];
+        let dup_degraded = [];
+        if (hasDuplicateOnBothSides) {
+            const matched = new Array(productParts.length).fill(false);
+            const reverseMatched = new Array(reactantParts.length).fill(false);
+
+            // Step 1: Try to match reactants in order to products
+            let rIdx = 0;
+            for (let pIdx = 0; pIdx < productParts.length && rIdx < reactantParts.length; pIdx++) {
+                if (productParts[pIdx] === reactantParts[rIdx]) {
+                    matched[pIdx] = true;
+                    reverseMatched[rIdx] = true;
+                    rIdx++;
+                }
+            }
+
+            // Step 2: Any unmatched product molecule is a synthesis candidate
+            if (productParts.length > reactantParts.length) {
+                for (let i = 0; i < productParts.length; i++) {
+                    if (!matched[i]) {
+                        const pname = productParts[i].split("(")[0].trim();
+                        // Optional: look at productParts[i-1] or [i+1] to context-check
+                        dup_synthesized.push({ name: pname });
+                    }
+                }
+            }
+
+            if (reactantParts.length > productParts.length) {
+                for (let i = 0; i < reactantParts.length; i++) {
+                    if (!reverseMatched[i]) {
+                        const pname = reactantParts[i].split("(")[0].trim();
+                        dup_degraded.push({ name: pname, full: reactantParts[i], index: i });
+                    }
+                }
+            }
+        }
         // normalize reaction parts
         const reactantMap = new Map(reactantParts.map(p => [p.split("(")[0].trim(), p]));
         const productMap  = new Map(productParts.map(p => [p.split("(")[0].trim(), p]));
 
         let allNames = [];
-        if (!(degraded.length > 0 && synthesized.length > 0)) {
+        if ((!(degraded.length > 0 && synthesized.length > 0)) || (!(degraded.length > 0 && dup_synthesized.length > 0))) {
             productParts.forEach(p => {
                 const name = p.split("(")[0].trim();
                 if (!allNames.includes(name)) allNames.push(name);
@@ -215,7 +243,7 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
         }
 
 
-        if (synthesized.length > 0 && degraded.length === 0) {
+        if ((synthesized.length > 0 && degraded.length === 0)||(dup_synthesized.length > 0 && degraded.length === 0)) {
             // Use productParts as reference
             let rIdx = 0;
             for (let i = 0; i < productParts.length; i++) {
@@ -299,7 +327,28 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
         console.log(fullReactionString);
         console.log(normalizedProducts.join("."));
 
+        if (hasDuplicateOnBothSides) {
+            dup_synthesized = [];
+            if (productParts.length > reactantParts.length) {
+                for (let i = 0; i < normalizedProducts.length; i++) {
+                    const before = productDelimiters[i - 1];
+                    const after = productDelimiters[i];
+
+                    const isIsolatedPlus = (before !== "." && after !== ".");
+
+                    if (isIsolatedPlus) {
+                        dup_synthesized.push({
+                            name: normalizedProducts[i].split("(")[0].trim(),
+                            full: normalizedProducts[i],
+                            index: i
+                        });
+                    }
+                }
+          }
+        }
         synth_deg_changesDict = {
+                dup_synthesized: dup_synthesized,
+                dup_degraded: dup_degraded,
                 synthesized: synthesized,
                 degraded: degraded,
                 fullReactionString: fullReactionString
@@ -477,9 +526,9 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
 
     return {
         changes: changesDict,
-        complexChanges: useThisComplexChanges,
+        complexChanges: useThisComplexChanges, // return + . changes
         synth_deg_changes: synth_deg_changesDict,
-        outputErrors: output // return + . changes
+        outputErrors: output 
     };
 }
 
