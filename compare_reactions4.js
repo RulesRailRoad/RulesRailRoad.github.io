@@ -189,7 +189,7 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
                     if (!matched[i]) {
                         const pname = productParts[i].split("(")[0].trim();
                         // Optional: look at productParts[i-1] or [i+1] to context-check
-                        dup_synthesized.push({ name: pname });
+                        dup_synthesized.push({ name: pname, full: productParts[i] });
                     }
                 }
             }
@@ -252,7 +252,8 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
                 const r = reactantMap.get(name);
 
                 normalizedProducts.push(product);
-                if (r) {
+                const isSynth = synthesized.concat(dup_synthesized).some(s => s.full === product);
+                if (r && !isSynth) {
                     normalizedReactants.push(r);
                     reactantDelimiters.push(reactantDelimMap[name] ?? "+");
                 } else {
@@ -281,10 +282,15 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
                 const name = reactant.split("(")[0].trim();
                 const p = productMap.get(name);
 
+                const isDeg = degraded.concat(dup_degraded || []).some(d => d.full === reactant);
                 normalizedReactants.push(reactant);
                 reactantDelimiters.push(reactantDelimMap[name] ?? "+");
 
-                normalizedProducts.push(p ? p : reactant);
+                if (p && !isDeg) {
+                    normalizedProducts.push(p);
+                } else {
+                    normalizedProducts.push(reactant); // degraded
+                }
                 productDelimiters.push(productDelimMap[name] ?? "+");
             }
 
@@ -326,6 +332,11 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
         fullReactionString = normalizedReactants.join(".");
         console.log(fullReactionString);
         console.log(normalizedProducts.join("."));
+
+        if (complex_changes && complex_changes.length > 3 && productParts.length ===1) {
+            complex_changes.splice(complex_changes.length - 2, 1);
+        }
+        console.log(complex_changes);
 
         if (hasDuplicateOnBothSides) {
             dup_synthesized = [];
