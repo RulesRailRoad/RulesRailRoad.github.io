@@ -1,6 +1,6 @@
 // bngl_parser.js
 import { expandExpr } from './expanded.js';
-import { compareReactions, stateChangeUp, stateChangeDown, bondAddedNonRev, bondRemovedNonRev, bondAddedRev, bondRemovedRev } from './compare_reactions.js';
+import { compareReactions, stateChangeUp, stateChangeDown, bondAddedNonRev, bondRemovedNonRev, bondAddedRev, bondRemovedRev } from './compare_reactions4.js';
 import { bnglToRailroad } from './Molecules_BNGL_to_Python4.js';
 
 const MoleculeColor = 'lightgreen';
@@ -192,25 +192,34 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
             const parts = line.split(/\s+/);
 
             let expr = ' ';
+            let display_obs;
+            let name;
             if (parts.length === 2) {
                 expr = parts[1];
+                name = parts[0];
             } else {
-                expr = parts.slice(2).join(' ')
+                expr = parts.slice(2).join(' ');
+                name = parts[1];
             }
             if (expr.includes(':')) expr = expr.split(':')[1];
             if (expr.includes('#')) {
                 expr = expr.split('#')[0].trim();
             }
             if (/\),\s*/.test(expr)) {
-                const exprParts = expr.split(/\),\s*/).map(e => e.trim() + ')').filter(e => e !== ')');
+                const exprParts = expr.split(/\),\s*/).map(e => {
+                    const trimmed = e.trim();
+                    return trimmed.endsWith(')') ? trimmed : trimmed + ')';
+                }).filter(e => e !== ')');
                 for (const subExpr of exprParts) {
                     const trimmed = subExpr.trim();
+                    display_obs = name+"\t" +subExpr;
                     const expanded = expandExpr(trimmed, molSiteDict);
-                    output.push(bnglToRailroad(expanded, trimmed, null, molSiteDict, showBNGLString, showMolecules, showBondIndices, null, null));
+                    output.push(bnglToRailroad(expanded, display_obs, null, molSiteDict, showBNGLString, showMolecules, showBondIndices, null, null));
                 }
             } else {
             const expanded = expandExpr(expr, molSiteDict);
-            output.push(bnglToRailroad(expanded, expr, null, molSiteDict, showBNGLString, showMolecules, showBondIndices, null, null));
+            display_obs = name+"\t" +expr;
+            output.push(bnglToRailroad(expanded, display_obs, null, molSiteDict, showBNGLString, showMolecules, showBondIndices, null, null));
             }
         }
     }
