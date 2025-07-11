@@ -103,7 +103,7 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
     const replaced_expandedProducts = expandedProducts.replace(/ \+ /g, '.');
     const changesDict = {};
     let synth_deg_changesDict = {};
-    const rmolCounter = {};
+    let rmolCounter = {};
     const pmolCounter = {};
 
     let reactantParts = replaced_expandedReactants.split(".");
@@ -358,7 +358,7 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
         reactantParts = normalizedReactants;
         productParts = normalizedProducts;   
 
-
+        const reactantSiteTracker = {};
         for (const part of reactantParts) {
             const molName = part.split("(")[0].trim();
             if (!degraded.includes(molName)) continue;
@@ -367,14 +367,21 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
             if (!siteBlock) continue;
 
             const sites = siteBlock.split(",");
+            rmolCounter[molName] = (rmolCounter[molName] || 0) + 1;
+            const molLabel = `${molName} #${rmolCounter[molName]}`;
+
+            if (!reactantSiteTracker[molLabel]) {
+                reactantSiteTracker[molLabel] = {};
+            }
+
             for (const site of sites) {
                 const bondMatch = site.match(/!(\d+)/);
                 if (bondMatch) {
                     const siteName = site.split("~")[0].split("!")[0];
-                    const molLabel = `${molName} #${rmolCounter[molName] || 1}`;  // fallback to #1 if counter hasn't run yet
+                    const index = reactantSiteTracker[molLabel][siteName] || 0;
 
                     const siteKey = duplicateSiteTrackers[molName]?.[siteName]
-                        ? `${molLabel}:${siteName}[0]`
+                        ? `${molLabel}:${siteName}[${index}]`
                         : `${molLabel}:${siteName}`;
 
                     changesDict[siteKey] = {
@@ -384,11 +391,13 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
                         product: site.split("!")[0] + "!-",
                         change: [bondRemovedNonRev],
                     };
+                    reactantSiteTracker[molLabel][siteName] = index + 1;
                 }
             }
         }
     }
     
+    rmolCounter = {};
     const allRsites = [];
     for (const part of reactantParts) {
         const rmol = part.split("(")[0];
