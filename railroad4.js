@@ -406,6 +406,7 @@ export class Diagram extends DiagramMultiContainer {
                 new Path(x, y).h(20).addTo(g);
                 x += 20;
             }
+            item.x = x;
             item.format(x, y, item.width).addTo(g);
             x += item.width;
             y += item.height;
@@ -413,6 +414,7 @@ export class Diagram extends DiagramMultiContainer {
                 new Path(x, y).h(20).addTo(g);
                 x += 20;
             }
+            item.y = y;
         }
 
         this.attrs["width"] = (this.width + paddingLeft + paddingRight).toString();
@@ -424,8 +426,18 @@ export class Diagram extends DiagramMultiContainer {
         for (const coords of Object.values(bond_coords)) {
             if (coords.length >= 2) {
                 const [[x1, y1], [x2, y2]] = coords;
-                const offset = Math.min(Math.max(Math.abs(y2 - y1), i * 10), i * 8)+90;
-                const vert = parseFloat(this.attrs["height"]) / 6 + offset + i * 25;
+
+                let maxStackHeight = 0;
+                for (const item of this.items) {
+                    if (!(item instanceof DiagramItem)) continue;
+
+                    const itemEndY = item.total_height ?? item.height ?? 0;
+                    maxStackHeight =  Math.max(maxStackHeight, itemEndY);
+                    
+                }
+
+                const offset = Math.min(Math.max(Math.abs(y2 - y1), i * 10), i * 8);
+                const vert = maxStackHeight/1.5 + offset + i * 25;
                 const bottom_y = y1 + vert;
                 const dist_up = bottom_y - y2;
                 new Path(x1, y1).down(vert).right(x2 - x1).up(dist_up).addTo(g).attrs["style"] = "stroke: black";
@@ -517,6 +529,7 @@ export class Sequence extends DiagramMultiContainer {
     }
 
     format(x, y, width) {
+        this.formatted_y = y;
         const [leftGap, rightGap] = determineGaps(width, this.width);
         new Path(x, y).h(leftGap).addTo(this);
         new Path(x + leftGap + this.width, y + this.height).h(rightGap).addTo(this);
@@ -536,6 +549,13 @@ export class Sequence extends DiagramMultiContainer {
                 x += 20;
             }
         }
+
+        let totalHeight = 0;
+        for (const item of this.items) {
+            totalHeight += item.total_height ?? item.height ?? 0;
+
+        }
+        this.total_height = totalHeight;
 
         return this;
     }
@@ -558,6 +578,7 @@ export class Choice extends DiagramMultiContainer {
     constructor(defaultIndex, ...items) {
         super("g", items);
         if (defaultIndex >= items.length) throw new Error("Invalid default index");
+        this.items = items;
         this.default = defaultIndex;
         this.right_bind = false;
         this.right_bind_color = 'black';
@@ -607,6 +628,7 @@ export class Choice extends DiagramMultiContainer {
     }
 
     format(x, y, width) {
+        this.formatted_y = y;
         const [leftGap, rightGap] = determineGaps(width, this.width);
         new Path(x, y).h(leftGap).addTo(this);
         new Path(x + leftGap + this.width, y + this.height).h(rightGap).addTo(this);
@@ -659,6 +681,11 @@ export class Choice extends DiagramMultiContainer {
                 .up(distanceFromY - AR * 2 + item.height - defaultItem.height).arc("wn").addTo(this);
         }
 
+        let totalHeight = 0;
+        for (const item of this.items) {
+            totalHeight += item.total_height ?? item.height ?? 0;
+        }
+        this.total_height = totalHeight;
         return this;
     }
 
@@ -1302,6 +1329,7 @@ export class Terminal extends DiagramItem {
         if (this.title !== null) {
             new DiagramItem("title", {}, this.title).addTo(this);
         }
+        this.total_height = this.up+this.down;
 
         return this;
     }
@@ -1587,6 +1615,7 @@ export class NonTerminal extends DiagramItem {
             new DiagramItem("title", {}, this.title).addTo(this);
         }
 
+        this.total_height = this.up+this.down;
         return this;
     }
 
