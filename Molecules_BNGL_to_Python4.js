@@ -28,6 +28,12 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
     const degraded = synth_deg_changes?.degraded || [];
     const dup_degraded = synth_deg_changes?.dup_degraded || [];
 
+    const pureSynthesized = synth_deg_changes?.pure_synthesized || [];
+    const pureDegraded = synth_deg_changes?.pure_degraded || [];
+
+    const isPureSynthesis = pureSynthesized.length > 0;
+    const isPureDegradation = pureDegraded.length > 0;
+
     const label = showBNGLString ? (displayString || bnglString).trim() : " ";
     const diagrams = [
         `add("${label}",`,
@@ -48,8 +54,11 @@ export function bnglToRailroad(bnglString, displayString = null, changesDict = n
         moleculeCounter[moleculeName] = (moleculeCounter[moleculeName] || 0) + 1;
         const moleculeInstance = `${moleculeName} #${moleculeCounter[moleculeName]}`;
 
-        const isSynthesized = dup_synthesized?.some(s => s.name === moleculeName && s.index === idx);
-        const isDegraded = dup_degraded?.some(s => s.name === moleculeName && s.index === idx);
+        const isSynthesized = dup_synthesized?.some(s => s.name === moleculeName && s.index === idx) ||
+                      pureSynthesized.some(s => s.full === chunk);
+
+        const isDegraded = dup_degraded?.some(s => s.name === moleculeName && s.index === idx) ||
+                   pureDegraded.some(s => s.full === chunk);   
         
         if (siteBlock === "") {
             let molCode = `new Terminal("${moleculeName}", { box_color: "${MoleculeColor}" })`;

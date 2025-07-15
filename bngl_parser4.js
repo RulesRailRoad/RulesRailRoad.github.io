@@ -378,10 +378,22 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
                 p_display_str = "0"
             }
 
+            let synth_0 = false;
+            let deg_0 = false;
             if (!products_str.includes('(') || !reactants_str.includes('(')) {
                 if (!r_display_str) {
                     r_display_str = "0"
+                    reactants_str = "0"
                 }
+                if (products_str === "0") {
+                    deg_0 = true;
+                }
+                if (reactants_str === "0") {
+                    synth_0 = true;
+                }
+            }
+
+            if ((!products_str.includes('(') || !reactants_str.includes('(')) && (!synth_0&&!deg_0)) {
                 console.warn("⚠️ Skipping malformed reaction:", r_display_str, arrow, p_display_str);
                 output.push('document.getElementById("diagramArea").appendChild(document.createElement("br"));');
                 output.push(
@@ -394,7 +406,8 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
 
             const display = `${r_display_str} ${arrow} ${p_display_str}`;
             const {changes, complexChanges, synth_deg_changes, outputErrors} = compareReactions(reactants_str, products_str, arrow, molSiteDict);
-            output.push(outputErrors.join('\n'));
+            if (outputErrors) {
+            output.push(outputErrors.join('\n'));}
 
             if (synth_deg_changes && changes) {
             if (synth_deg_changes.fullReactionString) {

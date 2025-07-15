@@ -46,27 +46,17 @@ function getDuplicateSiteNameMap(sites) {
         } return delimiters;
     }
 
-// function to compare + and . changes in reactions
-function compareComplexSeparation(expandedReactants, expandedProducts, arrow) { 
-    // extract delimiter order
-
-    const changes = []
-    const reactantOrder = extractGroupOrder(expandedReactants);
-    const productOrder = extractGroupOrder(expandedProducts);
-
-    if (reactantOrder.length !== productOrder.length) {
-        return;
-    }
-
-    for (let i = 0; i < reactantOrder.length; i++) {
-        if (reactantOrder[i] === productOrder[i]) {
-            if (reactantOrder[i] === "+") {
+function compareDelimiterLists(list1, list2, arrow) {
+    const changes = [];
+    for (let i = 0; i < list1.length; i++) {
+        if (list1[i] === list2[i]) {
+            if (list1[i] === "+") {
                 changes.push(NoChangeSeparate);
             } else {
                 changes.push(NoChangeComplex);
             }
         } else {
-            if (reactantOrder[i] === "+") {
+            if (list1[i] === "+") {
                 if (arrow === "->") {
                     changes.push(NonRevChangeComplex);
                 } else {
@@ -81,6 +71,22 @@ function compareComplexSeparation(expandedReactants, expandedProducts, arrow) {
             }
         }
     }
+    return changes;
+}
+
+// function to compare + and . changes in reactions
+function compareComplexSeparation(expandedReactants, expandedProducts, arrow) { 
+    // extract delimiter order
+
+    let changes = []
+    const reactantOrder = extractGroupOrder(expandedReactants);
+    const productOrder = extractGroupOrder(expandedProducts);
+
+    if (reactantOrder.length !== productOrder.length) {
+        return;
+    }
+
+    changes = compareDelimiterLists(reactantOrder, productOrder, arrow);
     return changes;
 }
 
@@ -101,7 +107,7 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
 
     const replaced_expandedReactants = expandedReactants.replace(/ \+ /g, '.');
     const replaced_expandedProducts = expandedProducts.replace(/ \+ /g, '.');
-    const changesDict = {};
+    let changesDict = {};
     let synth_deg_changesDict = {};
     let rmolCounter = {};
     const pmolCounter = {};
@@ -109,13 +115,92 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
     let reactantParts = replaced_expandedReactants.split(".");
     let productParts = replaced_expandedProducts.split(".");
 
+    if (expandedReactants.trim() === "0" || expandedProducts.trim() === "0") {
+
+        if (expandedReactants.trim() === "0") {
+            // Pure synthesis: all productParts are synthesized
+            const pure_synthesized = productParts.map((part, index) => ({
+                name: part.split("(")[0].trim(),
+                full: part,
+                index: index
+            }));
+
+            synth_deg_changesDict.pure_synthesized = pure_synthesized;
+            synth_deg_changesDict.pure_degraded = [];
+            synth_deg_changesDict.fullReactionString = productParts.join(".");
+
+            const original_delimiters = extractGroupOrder(expandedProducts);
+            const new_delimiters = extractGroupOrder(productParts.join(" + "));
+            complex_changes = compareDelimiterLists(original_delimiters, new_delimiters, arrow);
+
+            return {
+                changes: null,
+                complexChanges: complex_changes,
+                synth_deg_changes: synth_deg_changesDict,
+                outputErrors: null
+            };
+
+        }
+
+        if (expandedProducts.trim() === "0") {
+            // Pure degradation: all reactantParts are degraded
+            const pure_degraded = reactantParts.map((part, index) => ({
+                name: part.split("(")[0].trim(),
+                full: part,
+                index: index
+            }));
+
+            synth_deg_changesDict.pure_synthesized = [];
+            synth_deg_changesDict.pure_degraded = pure_degraded;
+            synth_deg_changesDict.fullReactionString = reactantParts.join(".");
+        
+            const original_delimiters = extractGroupOrder(expandedReactants);
+            const new_ = reactantParts.join(" + ");
+            const new_delimiters = extractGroupOrder(new_);
+            complex_changes = compareDelimiterLists(original_delimiters, new_delimiters, arrow);
+
+            for (const part of reactantParts) {
+                const molName = part.split("(")[0].trim();
+                const siteBlock = part.match(/\((.*?)\)/)?.[1];
+
+                if (!siteBlock) continue;
+                const sites = siteBlock.split(",");
+
+                for (const site of sites) {
+                    const bondMatch = site.match(/!(\d+)/);
+                    if (bondMatch) {
+                        const siteName = site.split("~")[0].split("!")[0];
+                        const molLabel = `${molName} #${rmolCounter[molName] || 1}`;  // fallback to #1 if counter hasn't run yet
+                        const siteKey = duplicateSiteTrackers[molName]?.[siteName]
+                            ? `${molLabel}:${siteName}[0]`
+                            : `${molLabel}:${siteName}`;
+
+                    changesDict[siteKey] = {
+                        molecule: molLabel,
+                        site: siteName,
+                        reactant: site,
+                        product: site.split("!")[0] + "!-",
+                        change: [bondRemovedNonRev],
+                    };
+                    }
+                }
+            }
+
+            return {
+                changes: changesDict,
+                complexChanges: complex_changes,
+                synth_deg_changes: synth_deg_changesDict,
+                outputErrors: null
+            };
+        }
+    }
+
+    changesDict = {};
     // Check if the molecule order matches
     const reactantOrder = reactantParts.map(p => p.trim().split("(")[0]);
     const productOrder = productParts.map(p => p.trim().split("(")[0]);
 
     if (reactantOrder.join(",") !== productOrder.join(",")) {
-        console.warn("Molecule order mismatch", "reactants:", reactantOrder, "products:", productOrder);
-
         const synthesized = productOrder.filter(p => !reactantOrder.includes(p));
         const degraded = reactantOrder.filter(p => !productOrder.includes(p));
 
@@ -305,38 +390,13 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
             }
         }
 
-        for (let i = 0; i < reactantDelimiters.length; i++) {
-        if (reactantDelimiters[i] === productDelimiters[i]) {
-            if (reactantDelimiters[i] === "+") {
-                complex_changes.push(NoChangeSeparate);
-            } else {
-                complex_changes.push(NoChangeComplex);
-            }
-        } else {
-            if (reactantDelimiters[i] === "+") {
-                if (arrow === "->") {
-                    complex_changes.push(NonRevChangeComplex);
-                } else {
-                    complex_changes.push(RevChangeComplex);
-                }
-            } else {
-                if (arrow === "->") {
-                    complex_changes.push(NonRevChangeSeparate);
-                } else {
-                    complex_changes.push(RevChangeSeparate);
-                }
-            }
-        }
-    }
+        complex_changes = compareDelimiterLists(reactantDelimiters, productDelimiters, arrow);
 
         fullReactionString = normalizedReactants.join(".");
-        console.log(fullReactionString);
-        console.log(normalizedProducts.join("."));
 
         if (complex_changes && complex_changes.length > 3 && productParts.length ===1) {
             complex_changes.splice(complex_changes.length - 2, 1);
         }
-        console.log(complex_changes);
 
         if (hasDuplicateOnBothSides) {
             dup_synthesized = [];
