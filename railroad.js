@@ -1,4 +1,4 @@
-// railroad2.js (JavaScript version of custom railroad2.py)
+// railroad.js (JavaScript version of custom railroad.py)
 // This assumes SVG-based rendering. Can be extended for canvas if needed.
 
 // Global variables
