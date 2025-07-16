@@ -69,7 +69,7 @@
      </tr>
     <tr>
   <td id="canvas-text">
-      <a href=index4.html style="font-weight:bold;">Visualize BNGL</a>
+      <a href=index.html style="font-weight:bold;">Visualize BNGL</a>
     </td>   
     <td id="canvas-text">
       <a href=bngl.html style="font-weight:bold;">BNGL overview</a>
@@ -116,12 +116,12 @@
   </div>
 
   <script type="module">
-    import { parseBNGLFile } from './bngl_parser4.js';
+    import { parseBNGLFile } from './bngl_parser.js';
     import {
         Diagram, DiagramItem, DiagramMultiContainer, Path, Terminal, NonTerminal, 
         Style, Group, Start, End, Sequence, Choice, Skip, TextDiagram,
         Comment, MultipleChoice, EndWhiteSpace, DEFAULT_STYLE, wrapString
-        } from './railroad4.js';
+        } from './railroad.js';
 
         // Make them global for eval() access
         Object.assign(window, {
