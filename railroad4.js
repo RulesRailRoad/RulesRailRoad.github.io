@@ -914,6 +914,9 @@ export class Group extends DiagramItem {
         labelElement.addTo(this);
         }
 
+    let totalHeight = 0;
+    totalHeight = (this.item.total_height-15) ?? this.item.height ?? 0;
+    this.total_height = totalHeight;
     return this;
   }
 
@@ -1473,7 +1476,7 @@ export class NonTerminal extends DiagramItem {
                 path1.addTo(this);
 
                 const path2 = new Path(x + width, y + this.height+VS*3)
-                    .arc("ne").arc("es").left(horiz_dist).arc("nw").down(this.height);
+                    .arc("ne").arc("es").left(horiz_dist).arc("nw").down(this.height+15);
                 path2.attrs.class = "bottom-bind";
                 path2.attrs.style = style;
                 path2.addTo(this);
