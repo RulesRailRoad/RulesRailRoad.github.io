@@ -159,29 +159,36 @@ function compareReactions(expandedReactants, expandedProducts, arrow, molSiteDic
             const new_delimiters = extractGroupOrder(new_);
             complex_changes = compareDelimiterLists(original_delimiters, new_delimiters, arrow);
 
+            const reactantSiteTracker = {};
             for (const part of reactantParts) {
                 const molName = part.split("(")[0].trim();
                 const siteBlock = part.match(/\((.*?)\)/)?.[1];
 
                 if (!siteBlock) continue;
                 const sites = siteBlock.split(",");
+                rmolCounter[molName] = (rmolCounter[molName] || 0) + 1;
+                const molLabel = `${molName} #${rmolCounter[molName]}`;
+
+                if (!reactantSiteTracker[molLabel]) {
+                    reactantSiteTracker[molLabel] = {};
+                }
 
                 for (const site of sites) {
                     const bondMatch = site.match(/!(\d+)/);
                     if (bondMatch) {
                         const siteName = site.split("~")[0].split("!")[0];
-                        const molLabel = `${molName} #${rmolCounter[molName] || 1}`;  // fallback to #1 if counter hasn't run yet
+                        const index = reactantSiteTracker[molLabel][siteName] || 0;
                         const siteKey = duplicateSiteTrackers[molName]?.[siteName]
-                            ? `${molLabel}:${siteName}[0]`
+                            ? `${molLabel}:${siteName}[${index}]`
                             : `${molLabel}:${siteName}`;
 
-                    changesDict[siteKey] = {
-                        molecule: molLabel,
-                        site: siteName,
-                        reactant: site,
-                        product: site.split("!")[0] + "!-",
-                        change: [bondRemovedNonRev],
-                    };
+                        changesDict[siteKey] = {
+                            molecule: molLabel,
+                            site: siteName,
+                            reactant: site,
+                            product: site.split("!")[0] + "!-",
+                            change: [bondRemovedNonRev],
+                        };
                     }
                 }
             }
