@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>RulesRailRoad: Conventions</title>
+    <link rel="stylesheet" type="text/css" href="public/styleblack.css"/>
+</head>
+<body>
+    <header>
+
+    <h1 style="color: white;">Rules_Rail_Road - visualizing rule-based models</h1>
+    <h2 style="color: white;">Visualize models in BNGL format</font></h2>
+<center>
+<table cellpadding="5">
+ <tr>
+     </tr>
+    <tr>
+  <td id="canvas-text">
+      <a href=index.html style="font-weight:bold;">Visualize BNGL</a>
+    </td>   
+    <td id="canvas-text">
+      <a href=bngl.html style="font-weight:bold;">BNGL overview</a>
+    </td>
+    <td id="canvas-text">
+      <a href=rr.html style="font-weight:bold;">Rules Railroad Concept</a>
+    </td>   
+    <td id="canvas-text">
+      <a href=viz.html style="font-weight:bold;">Visualizing conventions</a>
+    <td id="canvas-text">
+      <a href=examples.html style="font-weight:bold;">Examples</a>
+    </td>
+    <td id="canvas-text">
+      <a href=about.html style="font-weight:bold;">About</a>
+    </td>
+  </tr>  
+</table>
+</center>
+</header>
+
+    <h2>Visualization conventions</h2>
+<ul>
+<li>We demonstrate comparison between bnglViz that illustrates rule-based modeling as a set of individual cartoons describing interactions, 
+    and Rules_Rail_Road that illustrates rule-based modeling as a connected network of molecules that is controlled by the rules</li>
+<li>Compartments are ignored and not visualized in RRR, but are accounted for in bnglViz</li>
+<li>Reaction rates and some features like functions are ignored and not visualized in both RRR and bnglViz </li>
+<li>Advantage: color-agnostic: while colors are added for visual convenience (green corresponds to forming a bond, 
+    and it is like green light that opens the traffic alo .... </li>
+<li> OPEN ISSUES: + vs . - possible red/green box??? </li>
+<li>OPEN ISSUES: SYNTHESIS, DEGRADATION, CHANGE OF MOLECULE = COMBINATION OF SYNTHESIS AND DEGRADATION ???</li>
+</ul>
+
+  <table cellpadding="10" border="1">
+ <tr>
+    <td id="canvas-text">
+      <b>BNGL code</b>
+    </td>
+    <td id="canvas-text">
+      <b>Rules_Rail_Road visualization</b>
+    </td>
+    <td id="canvas-text">
+      <b>bnglViz visualization</b>
+    </td>
+ </tr>
+ <tr>
+       <td id="canvas-text">
+     <code>begin molecules<br>
+     1 EGFR(ecd,tmd,Y1~u~p,Y2~u~p)   #EGF receptor</code><br><br>
+    <small><b>NB:</b> The first number is optional and not included in BNGL processing or visualization. 
+           Instead of <code>begin molecules</code> the block may start with <code>begin molecular types</code>. 
+           </small>
+    </td>
+    <td id="canvas-text">
+      <img src="images/rr-egfr-mol.png" width=400>
+    </td>
+    <td id="canvas-text">
+      <img src="images/bngl_molec.png" width=400>
+    </td>
+       </tr> 
+ <tr> 
+            <td id="canvas-text">
+     <code>begin species<br>
+1  egfr(l,r,Y1068~Y,Y1148~Y)     egfr_tot #unphosphorylated receptor</code><br><br>
+    <small><b>NB:</b> The first number is optional and not included in BNGL processing or visualization. 
+           Instead of <code>begin species</code> the block may start with <code>begin seed species</code>. 
+           </small>
+    </td>
+    <td id="canvas-text">
+      <img src="images/rr-egfr-species.png" width=400>
+      <img src="images/rr-egfr-species-w:bond.png" width=600>
+    </td>
+    <td id="canvas-text">
+      <img src="images/bngl_species.png" width=400>
+    </td>
+  </tr> 
+            <td id="canvas-text">
+     <code>begin observables<br>
+1  egfr(l,r,Y1068~Y,Y1148~Y~P)     Dimers1</code><br><br>
+    <small><b>NB:</b> The first number is optional and not included in BNGL processing or visualization. 
+           Instead of <code>begin species</code> the block may start with <code>begin seed species</code>. 
+           </small>
+    </td>
+    <td id="canvas-text">
+      <img src="images/rr-egfr-observable.png" width=450>
+      <img src="images/rr-egfr-observable-w:binds.png" width=450>
+    </td>
+    <td id="canvas-text">
+      <img src="images/bngl_species.png" width=400>
+    </td>
+  </tr>
+      <tr>
+            <td id="canvas-text">
+     <code>begin reaction rules<br>
+1  egfr(l,r,Y1068~Y,Y1148~Y)     egfr_tot #unphosphorylated receptor</code><br><br>
+    <small><b>NB:</b> The symbols before <code>:</code> is reaction rule order - it is optional and not included in BNGL processing or visualization. 
+           Instead of <code>begin reaction rules</code> the block may start with <code>begin rules</code> or <code>begin reactions</code>. 
+           For details of notations (<code>?</code>, <code>|</code> under site shape, grey vs color, etc) 
+        refer to <a href="https://pubmed.ncbi.nlm.nih.gov/19399430/">Faeder et al., 2009</a>. </small>
+    </td>
+    <td id="canvas-text">
+      <img src="images/rr-rule-nonrev-binding.png" width=600>
+      <img src="images/rr-rule-nonrev-unbinding.png" width=600>
+    </td>
+    <td id="canvas-text">
+      <img src="images/bngl_rule.png" width=400>
+    </td>
+  </tr> 
+            <td id="canvas-text">
+     <code>more rules<br>
+1  egfr(l,r,Y1068~Y,Y1148~Y)     egfr_tot #unphosphorylated receptor</code><br><br>
+    <small><b>NB:</b> The first number is optional and not included in BNGL processing or visualization. 
+           Instead of <code>begin species</code> the block may start with <code>begin seed species</code>. 
+           </small>
+    </td>
+    <td id="canvas-text">
+      <img src="images/rr-rule-rev-binding.png" width=600>
+      <img src="images/rr-rule-rev-unbinding.png" width=600>
+    </td>
+    <td id="canvas-text">
+      <img src="images/bngl_species.png" width=400>
+    </td>
+  </tr> 
+            <td id="canvas-text">
+     <code>more rules<br>
+1  egfr(l,r,Y1068~Y,Y1148~Y)     egfr_tot #unphosphorylated receptor</code><br><br>
+    <small><b>NB:</b> The first number is optional and not included in BNGL processing or visualization. 
+           Instead of <code>begin species</code> the block may start with <code>begin seed species</code>. 
+           </small>
+    </td>
+    <td id="canvas-text">
+      <img src="images/rr-rule-statechange-phos.png" width=450>
+      <img src="images/rr-rule-statechange-w:PTP.png" width=600>
+      <img src="images/rr-rule-statechange-w:Src.png" width=600>
+    </td>
+    <td id="canvas-text">
+      <img src="images/bngl_species.png" width=400>
+    </td>
+  </tr> 
+            <td id="canvas-text">
+     <code>more rules<br>
+1  egfr(l,r,Y1068~Y,Y1148~Y)     egfr_tot #unphosphorylated receptor</code><br><br>
+    <small><b>NB:</b> The first number is optional and not included in BNGL processing or visualization. 
+           Instead of <code>begin species</code> the block may start with <code>begin seed species</code>. 
+           </small>
+    </td>
+    <td id="canvas-text">
+      <img src="images/rr-synth-deg.png" width=400>
+      <img src="images/rr-deg-separation.png" width=600>
+      <img src="images/rr-deg-unbind-separation.png" width=600>
+    </td>
+    <td id="canvas-text">
+      <img src="images/bngl_species.png" width=400>
+    </td>
+  </tr> 
+      
+</table>
+
+   
+</body>
+</html>
