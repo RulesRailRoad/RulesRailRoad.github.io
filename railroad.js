@@ -1476,7 +1476,10 @@ export class NonTerminal extends DiagramItem {
                 path1.addTo(this);
 
                 const path2 = new Path(x + width, y + this.height+VS*3)
-                    .arc("ne").arc("es").left(horiz_dist).arc("nw").down(this.height+15);
+                    .arc("ne").arc("es").left(horiz_dist).arc("nw").down(this.height);
+                if (this.bond_num !== "+") {
+                    path2.down(15);
+                }
                 path2.attrs.class = "bottom-bind";
                 path2.attrs.style = style;
                 path2.addTo(this);
