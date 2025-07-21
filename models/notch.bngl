@@ -20,8 +20,8 @@ km1   0.1
 end parameters
 
 begin molecules
-Notch(location~ER,DSLbind,Ibind)
-ICN(location~ER,Nbind,CSLbind,MAMLbind)
+Notch(location~ER~G~M,DSLbind,Ibind)
+ICN(location~ER~G~M~N,Nbind,CSLbind,MAMLbind)
 OFUT1()   
 Fringe()          
 Furin()
