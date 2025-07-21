@@ -436,7 +436,7 @@ export class Diagram extends DiagramMultiContainer {
                     
                 }
 
-                const offset = Math.min(Math.max(Math.abs(y2 - y1), i * 10), i * 8);
+                const offset = Math.min(Math.max(Math.abs(y2 - y1), i * 10), i * 8)+AR*2;
                 const vert = maxStackHeight/1.5 + offset + i * 25;
                 const bottom_y = y1 + vert;
                 const dist_up = bottom_y - y2;
