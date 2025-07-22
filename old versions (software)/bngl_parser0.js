@@ -1,7 +1,7 @@
 // bngl_parser.js
-import { expandExpr } from './expanded.js';
-import { compareReactions, stateChangeUp, stateChangeDown, bondAddedNonRev, bondRemovedNonRev, bondAddedRev, bondRemovedRev } from './compare_reactions0.js';
-import { bnglToRailroad } from './Molecules_BNGL_to_Python0.js';
+import { expandExpr } from '../expanded.js';
+import { compareReactions, stateChangeUp, stateChangeDown, bondAddedNonRev, bondRemovedNonRev, bondAddedRev, bondRemovedRev } from '../compare_reactions0.js';
+import { bnglToRailroad } from '../Molecules_BNGL_to_Python0.js';
 
 const MoleculeColor = 'lightgreen';
 const SiteColor = 'lightblue';
