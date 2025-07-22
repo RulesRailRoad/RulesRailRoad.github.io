@@ -161,6 +161,17 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
                 }
             }
             let species = parts.find(p => p.includes('(') && p.includes(')')) || '';
+            if (species) {
+                if (!molSiteDict.hasOwnProperty(species.split('(')[0])) {
+                    output.push('document.getElementById("diagramArea").appendChild(document.createElement("br"));');
+                    output.push(
+                    'document.getElementById("diagramArea").appendChild(' +
+                        `Object.assign(document.createElement("small"), { textContent: ${JSON.stringify("⚠️ Unrecognized molecule: " + species)} })` +
+                    ');'
+                    );
+                    continue;
+                }
+            }
             if (species.includes(':')) species = species.split(':')[1];
 
             if (species) output.push(bnglToRailroad(species, null, null, molSiteDict, showBNGLString, showMolecules, showBondIndices, null, null));
@@ -204,6 +215,29 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
             if (expr.includes(':')) expr = expr.split(':')[1];
             if (expr.includes('#')) {
                 expr = expr.split('#')[0].trim();
+            }
+            if (!expr.includes('(')) {
+                if (molSiteDict.hasOwnProperty(expr)) {
+                    expr = MalformedMolecules(expr);
+                } else if (expr.includes('.')) {
+                    const splitparts = expr.split('.').map(p => {
+                        if (!p.includes('(')) {
+                            if (molSiteDict.hasOwnProperty(p)) {
+                                return MalformedMolecules(p);
+                            }
+                        }
+                        return p;
+                    });
+                    expr = splitparts.join('.');
+                } else {
+                    output.push('document.getElementById("diagramArea").appendChild(document.createElement("br"));');
+                    output.push(
+                    'document.getElementById("diagramArea").appendChild(' +
+                    `Object.assign(document.createElement("small"), { textContent: ${JSON.stringify("⚠️ Unrecognized molecule: " + expr)} })` +
+                    ');'
+                    );
+                    continue;
+                }
             }
             if (/\),\s*/.test(expr)) {
                 const exprParts = expr.split(/\),\s*/).map(e => {
