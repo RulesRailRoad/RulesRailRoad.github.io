@@ -66,7 +66,7 @@ begin reaction rules
 
 # Aggregation (R+R)
 # Note:  R must be bound to ligand to dimerize.
-2  L(r!1).R(l!1,r) + L(r!1).R(l!1,r) <-> L(r!1).R(l!1,r!3).L(r!2).R(l!2,r!3) kpD,kmD
+2  L(r!1).R(l!1,r) + L(r!2).R(l!2,r) <-> L(r!1).R(l!1,r!3).L(r!2).R(l!2,r!3) kpD,kmD
 
 # Receptor binding to adaptor (R+A)
 # Note: A and R can bind independent of whether A is bound to K or 

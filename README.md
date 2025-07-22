@@ -3,7 +3,7 @@
 <img src="images/files-flowchart.png" alt="flowchart of implementation with file names" align="right" width="200" height="500">
 
 <br></br>
-This package is designed to convert BioNetGen Language (BNGL) strings into visual railroad diagrams to represent biological networks and reaction mechanisms. The `bngl_parser.js` module preprocesses strings from BNGL code files. `expanded.js` returns fully expanded BNGL strings and `compare_reactions.js` finds differences between reactants and products in a BNGL reaction rule. `Molecules_BNGL_to_Python.js` is designed to take these parsed BNGL strings and translate them into formatted diagram code to be drawn by railroad diagram classes. `railroad2.js` is a railroad-diagram renderer that reads the diagram code and generates the SVG railroad visualization. These diagrams show molecular interactions by highlighting sites, states, bonds, and changes through reactions.
+This package is designed to convert BioNetGen Language (BNGL) strings into visual railroad diagrams to represent biological networks and reaction mechanisms. The `bngl_parser.js` module preprocesses strings from BNGL code files. `expanded.js` returns fully expanded BNGL strings and `compare_reactions.js` finds differences between reactants and products in a BNGL reaction rule. `Molecules_BNGL_to_Python.js` is designed to take these parsed BNGL strings and translate them into formatted diagram code to be drawn by railroad diagram classes. `railroad.js` is a railroad-diagram renderer that reads the diagram code and generates the SVG railroad visualization. These diagrams show molecular interactions by highlighting sites, states, bonds, and changes through reactions.
 <br></br>
 <br></br>
 
@@ -31,6 +31,10 @@ Detects bond and state changes between reactants and products and stores the cha
 - compareReactions Functions:
   - Analyzes differences between the expanded left-hand side (reactants) and the expanded right-hand side (products) of a reaction rule.
   - Tracks changes like bond addition, bond breakage, state transitions, the type of reaction (reversible or nonreversible), and their respective molecules, sites, and states.
+  - Tracks synthesis and degradation changes and stores in a separate dictionary (synth_deg_changesDict).
+    - Stores synthesized/degraded molecule's name, full code, and index.
+    - Handles multiple molecules with the same name separately.
+    - Handles reactions that use 0 in reactants or products to describe synthesis/degradation.
   - Stores changes with notes like:
     - "radded" / "nradded" (bond added)
     - "rbroken" / "nrbroken" (bond broken)
@@ -55,9 +59,16 @@ changesDict[siteKey] = {
 
 ## Molecules_BNGL_to_Python.js
 
-Breaks BNGL string into components to write diagram code that includes molecules, sites, states, bonds, and changes from reactions (e.g., state transitions or binding/unbinding). Inserts diagram elements (e.g., Choice, Sequence, Terminal), applies notes for state or bond changes, and returns a string of JavaScript code for rendering by `railroad2.js`:
+Breaks BNGL string into components to write diagram code that includes molecules, sites, states, bonds, and changes from reactions (e.g., state transitions or binding/unbinding). Inserts diagram elements (e.g., Choice, Sequence, Terminal), applies notes for state, bond, or molecule changes, and returns a string of JavaScript code for rendering by `railroad.js`:
 ```javascript
-"new Choice(0, new Comment(\"    \"), new Sequence(new Terminal(\"y1068\", { box_color: \"lightblue\" }"
+`new Terminal("EGFR", { box_color: "lightgreen" }),
+    new Sequence(new Terminal("ecd", { box_color: "lightblue" })),
+    new Sequence(new Terminal("tmd", { box_color: "lightblue" })),
+        new Sequence(new Choice(0,
+            new Terminal("y1068", { box_color: "lightblue" }),
+                new NonTerminal("u", { box_color: "khaki" }),
+        new NonTerminal("p", { box_color: "khaki" })
+                   )),`
 ```
 
 ### Key Parameters:
@@ -67,7 +78,8 @@ Breaks BNGL string into components to write diagram code that includes molecules
 - `changesDict` (Object, optional): Dictionary indicating changes such as bonds formed/broken and state transitions. Default is `null`.
 - `molSiteDict` (Object, optional): Dictionary containing molecule-specific site information; default is an empty object `{}`.
 - `arrow` (String, optional): Symbol representing reversible or nonreversible reaction changes (e.g., -> or <->).
-- `complexChanges` (Array, optional): Array indicating whether molecules remain in the same complex or switch (e.g., dissociation or reassociation). Default is `null`
+- `complexChanges` (Array, optional): Array indicating whether molecules remain in the same complex or switch (e.g., dissociation or reassociation). Default is `null`.
+- `synth_deg_changes` (Object, optional): Dictionary indicating changes such as synthesized or degraded molecules. Default is `null`.
 
 ### Diagram Elements:
 The generated railroad diagrams visually represent BNGL components using customizable color-coded elements:
@@ -108,15 +120,15 @@ const RevChangeSeparate = "RevChangeSeparate";
   - Non-reversible switch between same/separate complex (NonRevChangeComplex, NonRevChangeSeparate)
   - Reversible switch between same/separate complex (RevChangeComplex, RevChangeSeparate)
 
-## railroad2.js
+## railroad.js
 This module is a customized SVG-based renderer that defines layout classes to read the formatted diagram code and draw the related railroad diagram showing molecule and site structure, bond connectivity, binding/unbinding and state transitions, complex changes, and other styling components.
 
 ### Components
 Diagram()
-* Its arguments are the components of the diagram (e.g., Diagram(Choice(), Terminal())...)
+* its arguments are the components of the diagram (e.g., Diagram(Choice(), Terminal())...)
 
 `Terminal(text[, {box_color, bottom_bind, bottom_bind_color, bond_num, bond_type, wrap}])`
-* All the properties in the options bag are optional
+* all the properties in the options bag are optional
 * `box_color` specifies the color to fill the container
 * `bottom_bind` specifies possible bond connection (e.g, "!?" or "!+")
 * `bottom_bind_color` passes the color of the bond connection (e.g., "gray")
@@ -125,33 +137,32 @@ Diagram()
 * `wrap` specifies if the bond wrap around all states
 
 `NonTerminal(text[, {box_color, bottom_bind, bottom_bind_color, bond_num, bond_type, wrap}])`
-  * The optional arguments have the same meaning as for Terminal,
+  * the optional arguments have the same meaning as for Terminal,
     except it visualizes as a rectangular box rather than a rounded-rectangle
 
 `Skip()` - an empty line
 
-`Comment(text[, {href, title, cls}])` - a comment.
-* `href` makes the text a hyperlink with the given URL
-* `title` adds an SVG `<title>` element to the element, giving it "hover text" and a description for screen-readers and other assistive tech
-* `cls` is additional classes to apply to the element, beyond the default
-
 `Start({type, label})` and `End({type})` - the start/end shapes. 
-* Shapes are supplied by default.
-* All properties are optional.
+* shapes are supplied by default
+* all properties are optional
 * `type` takes either "simple" (the default) or `"complex"` for slightly different start/end shapes
 * `label` provides a text label before the diagram starts
 
 `EndWhiteSpace(changeType, type)` - separator between molecules
-* All properties are optional.
+* all properties are optional
 * `changeType` specifies a switch between molecules in the same complex or separate complexes
-* `type` argument has the same meaning as for Start and End.
+* `type` argument has the same meaning as for Start and End
 
 ### Containers
-`Sequence(...children)` - Arranges all arguments on the same horizontal line, one after another.
+`Sequence(...children)` - arranges all arguments on the same horizontal line, one after another
 
-`Choice(index, ...children)` - Arranges arguments on different vertical levels to represent mutually exclusive options. The index specifies the default (middle) choice.
+`Choice(index, ...children)` - arranges arguments on different vertical levels to represent mutually exclusive options. The index specifies the default (middle) choice
 
-`MultipleChoice(index, type, arrow, ...children)` - it's similar to Choice, but used to show state changes.
-* `index` specifies the default middle choice.
-* `type` specifies whether the state changes from a top state to a bottom state or vice versa.
+`MultipleChoice(index, type, arrow, ...children)` - it's similar to Choice, but used to show state changes
+* `index` specifies the default middle choice
+* `type` specifies whether the state changes from a top state to a bottom state or vice versa
 * `arrow` is either -> or <-> to specify whether the transition is reversible or non-reversible
+
+`Group(child, label?)` - highlights its child with a dashed outline, and optionally labels it
+* `label` specifies whether a molecule was synthesized or degraded; "synthesized" labels are shown in green, "degraded" in red
+
