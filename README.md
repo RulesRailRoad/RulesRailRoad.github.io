@@ -164,5 +164,6 @@ Diagram()
 * `arrow` is either -> or <-> to specify whether the transition is reversible or non-reversible
 
 `Group(child, label?)` - highlights its child with a dashed outline, and optionally labels it
-* `label` specifies whether a molecule was synthesized or degraded; "synthesized" labels are shown in green, "degraded" in red
+* `label` specifies whether a molecule was synthesized or degraded
+* "synthesized" labels are shown in green, "degraded" in red
 
