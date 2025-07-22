@@ -1,4 +1,4 @@
-## Overview
+# Overview
 
 This package is designed to convert BioNetGen Language (BNGL) strings into visual railroad diagrams to represent biological networks and reaction mechanisms. The `bngl_parser.js` module preprocesses strings from BNGL code files. `expanded.js` returns fully expanded BNGL strings and `compare_reactions.js` finds differences between reactants and products in a BNGL reaction rule. `Molecules_BNGL_to_Python.js` is designed to take these parsed BNGL strings and translate them into formatted diagram code to be drawn by railroad diagram classes. `railroad2.js` is a railroad-diagram renderer that reads the diagram code and generates the SVG railroad visualization. These diagrams show molecular interactions by highlighting sites, states, bonds, and changes through reactions. 
 
