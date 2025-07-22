@@ -42,10 +42,8 @@
     and Rules Railroad that illustrates rule-based modeling as a connected network of molecules that is controlled by the rules</li>
 <li>Compartments are ignored and not visualized in RRR, but are accounted for in bnglViz</li>
 <li>Reaction rates and some features like functions are ignored and not visualized in both RRR and bnglViz </li>
-<li>Advantage: color-agnostic: while colors are added for visual convenience (green corresponds to forming a bond, 
-    and it is like green light that opens the traffic alo .... </li>
-<li> OPEN ISSUES: + vs . - possible red/green box??? </li>
-<li>OPEN ISSUES: SYNTHESIS, DEGRADATION, CHANGE OF MOLECULE = COMBINATION OF SYNTHESIS AND DEGRADATION ???</li>
+<li>Advantage: color-agnostic: while colors are added for visual enhancement (e.g., green corresponds to forming a bond, red to breaking), 
+  the diagrams can still be read without them (by using symbols, e.g., arrows and their directions) </li>
 </ul>
 
   <table cellpadding="10" border="1">
@@ -62,8 +60,9 @@
  </tr>
  <tr>
        <td id="canvas-text">
-     <code>begin molecules<br>
-     1 EGFR(ecd,tmd,Y1~u~p,Y2~u~p)   #EGF receptor</code><br><br>
+     <b><code>begin molecules<br></b>
+      <br></br>
+     EGFR(l,r,Y1068~u~p,Y1148~u~p)</code><br><br>
     
     </td>
     <td id="canvas-text">
@@ -75,8 +74,11 @@
        </tr> 
  <tr> 
             <td id="canvas-text">
-     <code>begin species<br>
-1  egfr(l,r,Y1068~Y,Y1148~Y)     egfr_tot #unphosphorylated receptor</code><br><br>
+     <b><code>begin species<br></b>
+      <br></br>
+EGFR(l,r,Y1068~u,Y1148~u)</code><br><br>
+<br></br>
+EGFR(l,r,Y1068~P!1,Y1148~P).Grb2(SH2!1,SH3)</code><br><br>
     
     </td>
     <td id="canvas-text">
@@ -90,8 +92,11 @@
     </td>
   </tr> 
             <td id="canvas-text">
-     <code>begin observables<br>
-1  egfr(l,r,Y1068~Y,Y1148~Y~P)     Dimers1</code><br><br>
+     <b><code>begin observables<br></b>
+      <br></br>
+EGFR(l,r,Y1068~u,Y1148~u~p)</code><br><br>
+<br></br>
+EGFR(l,r!+,Y1068~u)</code><br><br>
 
     </td>
     <td id="canvas-text">
@@ -106,12 +111,14 @@
   </tr>
       <tr>
             <td id="canvas-text">
-     <code>begin reaction rules<br>
-1  egfr(l,r,Y1068~Y,Y1148~Y)     egfr_tot #unphosphorylated receptor</code><br><br>
-    <small><b>NB:</b> The symbols before <code>:</code> is reaction rule order - it is optional and not included in BNGL processing or visualization. 
-           Instead of <code>begin reaction rules</code> the block may start with <code>begin rules</code> or <code>begin reactions</code>. 
-           For details of notations (<code>?</code>, <code>|</code> under site shape, grey vs color, etc) 
-        refer to <a href="https://pubmed.ncbi.nlm.nih.gov/19399430/">Faeder et al., 2009</a>. </small>
+     <b><code>begin reaction rules<br></b>
+      <br></br>
+      non-reversible binding rules<br>
+      <br></br>
+EGFR(Y1068~p)+Grb2(SH2,SH3) -> EGFR(Y1068~p!1).Grb2(SH2!1,SH3)</code><br><br>
+<br></br>
+EGFR(Y1068~p!1).Grb2(SH2!1,SH3) -> EGFR(Y1068~p)+Grb2(SH2,SH3)</code><br><br>
+  
     </td>
     <td id="canvas-text">
       <img src="images/rr-images/rr-rule-nonrev-binding.png" width=600>
@@ -128,11 +135,14 @@
     </td>
   </tr> 
             <td id="canvas-text">
-     <code>more rules<br>
-1  egfr(l,r,Y1068~Y,Y1148~Y)     egfr_tot #unphosphorylated receptor</code><br><br>
-    <small><b>NB:</b> The first number is optional and not included in BNGL processing or visualization. 
-           Instead of <code>begin species</code> the block may start with <code>begin seed species</code>. 
-           </small>
+     <code>reversible binding rules<br>
+      <br></br>
+EGFR(Y1068~p)+Grb2(SH2,SH3) <-> EGFR(Y1068~p!1).Grb2(SH2!1,SH3)</code><br><br>
+<br></br>
+EGFR(Y1068~p!1).Grb2(SH2!1,SH3) <-> EGFR(Y1068~p)+Grb2(SH2,SH3)</code><br><br>
+<br></br>
+EGFR(Y1068~p).Grb2(SH2,SH3!+) <-> EGFR(Y1068~p!1).Grb2(SH2!1,SH3!+)</code><br><br>
+   
     </td>
     <td id="canvas-text">
       <img src="images/rr-images/rr-rule-rev-binding.png" width=600>
@@ -157,11 +167,14 @@
     </td>
   </tr> 
             <td id="canvas-text">
-     <code>more rules<br>
-1  egfr(l,r,Y1068~Y,Y1148~Y)     egfr_tot #unphosphorylated receptor</code><br><br>
-    <small><b>NB:</b> The first number is optional and not included in BNGL processing or visualization. 
-           Instead of <code>begin species</code> the block may start with <code>begin seed species</code>. 
-           </small>
+     <code>state transition rules<br>
+      <br></br>
+EGFR(Y1068~p)+PTP() -> EGFR(Y1068~u)+PTP()</code><br><br>
+<br></br>
+EGFR(r!+,Y1068~u).Src() -> EGFR(r!+,Y1068~p).Src()</code><br><br>
+<br></br>
+EGFR(r!+,Y1068~u) -> EGFR(r!+,Y1068~p)</code><br><br>
+    
     </td>
     <td id="canvas-text">
       <img src="images/rr-images/rr-rule-statechange-phos.png" width=450>
@@ -179,11 +192,13 @@
     </td>
   </tr> 
             <td id="canvas-text">
-     <code>more rules<br>
-1  egfr(l,r,Y1068~Y,Y1148~Y)     egfr_tot #unphosphorylated receptor</code><br><br>
-    <small><b>NB:</b> The first number is optional and not included in BNGL processing or visualization. 
-           Instead of <code>begin species</code> the block may start with <code>begin seed species</code>. 
-           </small>
+     <code>synthesis, degradation rules<br>
+      <br></br>
+pro_EGF() -> EGF()</code><br><br>
+<br></br>
+EGF().EGFR() -> EGFR()</code><br><br>
+<br></br>
+EGF(r!1).EGFR(l!1,r) -> EGFR(l,r)</code><br><br>
     </td>
     <td id="canvas-text">
       <img src="images/rr-images/rr-synth-deg.png" width=400>
