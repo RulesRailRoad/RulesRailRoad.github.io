@@ -40,6 +40,19 @@
     padding: 1em;
     box-sizing: border-box;
     }
+    .section-flex {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 2em;   
+    }
+    .controls {
+      flex: 1;
+    }
+    .diagram-image {
+      flex-shrink: 0;
+      margin-right: 150px;
+    }
     .diagram-block {
       margin-bottom: 2em;
     }
@@ -91,7 +104,8 @@
 </header>
   <h2>BNGL to Diagram Visualizer</h2>
 
-  <div class="section">
+  <div class="section-flex">
+  <div class="controls">
     <label for="bnglFile">Input BNGL File:</label>
     <input type="file" id="bnglFile" accept=".bngl" />
     <button id="clearBtn">Clear</button>
@@ -101,6 +115,11 @@
     <label><input type="checkbox" id="showMolecules" checked /> Show molecular names</label>
     <label><input type="checkbox" id="showBondIndices" unchecked /> Show bond indices</label>
   </div>
+
+  <div class="diagram-image">
+    <img src="images/rr-egfr-w:bngl.png" alt="egfr molecule rr visualization" style="width: 550px; height: auto;" />
+  </div>
+</div>
 
   <button id="visualizeBtn">Visualize</button>
   <button id="saveBtn">Save Diagram</button>
