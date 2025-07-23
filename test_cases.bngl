@@ -99,7 +99,7 @@ begin reaction rules
     # degradation
     EGFR() -> 0 km1
     0 -> EGF() kp1
-    pro_EGF() -> EGF() kp1
+    pro_EGF() -> EGF(r) kp1
     EGF().EGFR() -> EGFR() kp1
     EGF(r!1).EGFR(l!1,r) -> EGFR(l,r) kp1, km1
 
