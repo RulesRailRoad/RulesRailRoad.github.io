@@ -39,6 +39,19 @@
 
     <h2>Syntax diagrams</h2>
 
+    <p>A syntax diagram is a graphical representation of a formal grammar that 
+        visually depicts the structure of a programming language or data format. 
+        Each diagram illustrates the permissible sequences of symbols in a language, 
+        where nodes represent non-terminal or terminal symbols, and arrows or paths indicate the flow of valid constructions.
+        Syntax diagram below defines a language of all sentences of the form 
+        "The {quick, —} {—, brown, red, black} fox {jumps, ran, walked} over the {—, lazy} {dog, cat, turtle}." 
+        Here, each bracketed group offers choices, and “—” means the element can be omitted. 
+        This gives: 2 × 4 × 3 × 2 × 3 = 144 possible sentences, such as: "The quick fox walked over the lazy cat." 
+        or "The brown fox ran over the dog."
+        <img src="images/sentence.png" width=600> 
+<br>
+         <h2>Syntax diagrams for BioNetGen</h2>
+        
     <p>Rule-based languages such as BNGL (BioNetGen Language) consists of symbolic sentences describing  molecules, species, observables, 
         reaction rules, and other parts of BNGL file. The structure of input file follows rules of 
         <a href="https://en.wikipedia.org/wiki/Context-free_grammargrammar" style="color: blue;">context-free grammar</a> that 
