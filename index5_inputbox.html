@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <head>
+    <title>Rules Railroad: Visualizer</title>
+    <link rel="stylesheet" type="text/css" href="public/styleblack.css"/>
+
+  <style>
+    body { font-family: sans-serif; margin: 0.5em; }
+    .section { margin-bottom: 1.5em; }
+    label { display: block; margin-top: 0.2em; font-size: 1em;}
+    #output { display: flex; gap: 2em; margin-top: 2em; }
+    #bnglOutput {
+      white-space: pre-wrap;
+      background: #f9f9f9;
+      padding: 1em;
+      border: 1px solid #ddd;
+      width: 40%;
+      max-height: 600px;
+      overflow: auto;
+      display: none;
+    }
+    #diagramArea h2 {
+    margin-top: 2em;
+    font-size: 1.8em;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 0.3em;
+    }
+    #diagramArea small {
+    margin-top: 2em;
+    font-size: 0.9em;
+    }
+    #diagramArea medium {
+    margin-top: 2em;
+    font-size: 1.1em;
+    }
+    #diagramAreaContainer {
+    width: 100%;
+    max-height: 600px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 1em;
+    box-sizing: border-box;
+    }
+    .section-flex {
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-start;
+      gap: 2em;   
+    }
+    .controls {
+      flex: 1;
+    }
+    .buttons-format {
+      flex: 0 0 48%;
+      min-width: 220px;
+      display: grid;
+      align-items: start;
+      box-sizing: border-box;
+      margin-top: 1.5rem;
+      margin-left: 2.5rem;
+    }
+    .diagram-image {
+      flex-shrink: 0;
+      margin-right: 150px;
+    }
+    .diagram-block {
+      margin-bottom: 2em;
+    }
+    .diagram-block h3 {
+      margin-bottom: 0.5em;
+      font-size: 1.1em;
+    }
+    svg {
+      border: 1px solid #ccc;
+    }
+    svg.railroad-diagram {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+      <header>
+
+    <h1 style="color: white;">Rules Railroad - visualizing rule-based models</h1>
+    <h2 style="color: white;">Visualize models in BNGL format</font></h2>
+<center>
+<table cellpadding="5">
+ <tr>
+     </tr>
+    <tr>
+  <td id="canvas-text">
+      <a href=index.html style="font-weight:bold;">Visualize BNGL</a>
+    </td>   
+    <td id="canvas-text">
+      <a href=bngl.html style="font-weight:bold;">BNGL overview</a>
+    </td>
+    <td id="canvas-text">
+      <a href=rr.html style="font-weight:bold;">Rules Railroad Concept</a>
+    </td>   
+    <td id="canvas-text">
+      <a href=viz.html style="font-weight:bold;">Visualizing conventions</a>
+    <td id="canvas-text">
+      <a href=examples.html style="font-weight:bold;">Examples</a>
+    </td>
+    <td id="canvas-text">
+      <a href=about.html style="font-weight:bold;">About</a>
+    </td>
+  </tr>  
+</table>
+</center>
+</header>
+  <h2>Render Direct BNGL Input</h2>
+
+  <div class="section-flex" style="align-items: flex-left; gap: 0.1em;">
+  <div class="controls">
+    <label for="bnglTextInput"> Paste/Write BNGL code directly:</label> 
+    <textarea id="bnglTextInput" rows="15" style="width:100%; font-family:monospace;">
+    begin molecule types
+    # define molecules here
+    # Example: EGFR(l,r,Y1068~u~p,Y1148~u~p)
+    end molecule types
+
+    begin species
+    # define species here
+    # Example: EGFR(l,r,Y1068~u,Y1148~u)
+    end species
+
+    begin observables
+    # define observables here
+    # Example: Molecules ObsEGFR EGFR()
+    end observables
+
+    begin reaction rules
+    # define rules here
+    # Example: EGFR(Y1068~u) -> EGFR(Y1068~p)
+    end reaction rules
+    </textarea>
+    </div>
+
+    <div class="buttons-format">
+    <label><input type="checkbox" id="showComments" checked /> Display commented lines next to cartoons</label>
+    <label><input type="checkbox" id="showBNGLString" checked /> Display BNGL next to cartoons</label>
+    <label><input type="checkbox" id="useBNGLNotations" checked /> Use BNGL notations</label>
+    <label><input type="checkbox" id="showMolecules" checked /> Show molecular names</label>
+    <label><input type="checkbox" id="displayFunctions" checked /> Show functions</label>
+    <label><input type="checkbox" id="showBondIndices" unchecked /> Show bond indices</label>
+    </div>
+
+</div>
+
+  <button id="visualizeBtn">Render RRR Visualization</button>
+  <br><b>NB:</b>The images at this page are scaled to fit to the page width. To have a proper visualization with all model
+  elements on one page on the same scale, use Save Diagram button.
+
+  <div id="output">
+    <div id="bnglOutput">(BNGL diagram output will appear here)</div>
+    
+    <div id="diagramAreaContainer" class="scroll-box">
+        <div id="diagramArea">
+    </div>
+  </div>
+
+  <script type="module">
+    import { parseBNGLFile } from './bngl_parser5.js';
+    import {
+        Diagram, DiagramItem, DiagramMultiContainer, Path, Terminal, NonTerminal, 
+        Style, Group, Start, End, Sequence, Choice, Skip, TextDiagram,
+        Comment, MultipleChoice, EndWhiteSpace, DEFAULT_STYLE, wrapString
+        } from './railroad5.js';
+
+        // Make them global for eval() access
+        Object.assign(window, {
+        Diagram, DiagramItem, DiagramMultiContainer, Path, Terminal, NonTerminal, 
+        Style, Group, Start, End, Sequence, Choice, Skip, TextDiagram,
+        Comment, MultipleChoice, EndWhiteSpace, DEFAULT_STYLE, wrapString
+        });
+
+    let bnglText = '';
+
+    // Global 'add' function used in output from parseBNGLFile
+    window.add = function(label, diagram) {
+    const area = document.getElementById("diagramArea");
+
+    const container = document.createElement("div");
+    container.className = "diagram-block";
+
+    const title = document.createElement("h3");
+    title.textContent = label;
+    title.style.whiteSpace = "pre";
+
+    // Generate SVG using writeSvg
+    const chunks = [];
+    diagram.writeSvg(chunk => chunks.push(chunk));
+    const svgString = chunks.join("");
+
+    // Inject into <div>
+    const svgContainer = document.createElement("div");
+    svgContainer.innerHTML = svgString;
+
+    container.appendChild(title);
+    container.appendChild(svgContainer);
+    area.appendChild(container);
+    };
+
+    document.getElementById("visualizeBtn").addEventListener("click", async () => {
+      const bnglText = document.getElementById("bnglTextInput").value.trim();
+
+      if (!bnglText) {
+        alert("Enter BNGL code for visualization.");
+        return;
+      }
+
+        const bnglOutputBox = document.getElementById("bnglOutput");
+        document.getElementById("diagramArea").innerHTML = '';
+
+        // Insert the SVG diagram styles
+        const style = document.createElement("style");
+        style.textContent = DEFAULT_STYLE;
+        document.head.appendChild(style);
+
+        try {
+            const useBNGL = document.getElementById("useBNGLNotations").checked;
+            const showBNGLString = document.getElementById("showBNGLString").checked;
+            const showComments = document.getElementById("showComments").checked;
+            const showMolecules = document.getElementById("showMolecules").checked;
+            const displayFunctions = document.getElementById("displayFunctions").checked;
+            const showBondIndices = document.getElementById("showBondIndices").checked;
+  
+            const output = await parseBNGLFile(bnglText, useBNGL, showComments, showBNGLString, showMolecules, showBondIndices, displayFunctions); // generates JS code
+            bnglOutputBox.textContent = output || "(No output generated)";
+
+            const script = document.createElement("script");
+            script.type = "module"; // optional, for cleaner scope
+            script.textContent = output;
+            document.body.appendChild(script);
+
+        } catch (err) {
+            alert("An error occurred while processing the BNGL file.");
+            console.error("❌ Processing error:", err);
+        }
+        });
+
+        const styleBlock = `<style>\n${DEFAULT_STYLE}\n
+            h2 {
+            font-size: 1.8em;
+            margin-top: 2em;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 0.3em;
+            }
+            small {
+            margin-top: 2em;
+            font-size: 0.9em;
+            }
+            </style>`;
+
+  </script>
+</body>
+</html>
