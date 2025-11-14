@@ -258,13 +258,16 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
             let expr = ' ';
             let display_obs;
             let name;
-            if (parts.length === 2) {
+            if (parts.length === 1) {
+                expr = parts[0];
+            } else if (parts.length === 2) {
                 expr = parts[1];
                 name = parts[0];
             } else {
                 expr = parts.slice(2).join(' ');
                 name = parts[1];
             }
+
             if (expr.includes(':')) expr = expr.split(':')[1];
             if (expr.includes('#')) {
                 expr = expr.split('#')[0].trim();
@@ -277,18 +280,26 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
                         if (!p.includes('(')) {
                             if (molSiteDict.hasOwnProperty(p)) {
                                 return MalformedMolecules(p);
+                            } else {
+                                console.warn(" BBBB Unrecognized molecule: " + expr);
                             }
                         }
                         return p;
                     });
                     expr = splitparts.join('.');
                 } else {
+                    console.warn("BBBBB Unrecognized molecule: " + expr);
                     output.push('document.getElementById("diagramArea").appendChild(document.createElement("br"));');
                     output.push(
                     'document.getElementById("diagramArea").appendChild(' +
                     `Object.assign(document.createElement("small"), { textContent: ${JSON.stringify("⚠️ Unrecognized molecule: " + expr)} })` +
                     ');'
                     );
+                    continue;
+                }
+            } else {
+                if (!molSiteDict.hasOwnProperty(expr.split('(')[0])) {
+                    console.warn("BBBBB Unrecognized molecule: " + expr);
                     continue;
                 }
             }
