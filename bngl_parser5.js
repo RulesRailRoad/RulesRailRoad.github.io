@@ -299,7 +299,12 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
                 }
             } else {
                 if (!molSiteDict.hasOwnProperty(expr.split('(')[0])) {
-                    console.warn("BBBBB Unrecognized molecule: " + expr);
+                    output.push(
+                    'document.getElementById("diagramArea").appendChild(' +
+                    `Object.assign(document.createElement("alert"), { textContent: ${JSON.stringify("⚠️ BBBBB Unrecognized molecule: " + expr)} })` +
+                    ');'
+                    );
+                    alert("⚠️ BBBBB Unrecognized molecule: " + expr);
                     continue;
                 }
             }
@@ -361,7 +366,12 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
             } else if (line.includes('->')) {
                 arrow = '->';
             } else {
-                console.warn("BBBBB No reaction arrow; skipping line ", line);
+                output.push(
+                    'document.getElementById("diagramArea").appendChild(' +
+                    `Object.assign(document.createElement("alert"), { textContent: ${JSON.stringify("⚠️ No reaction arrow; skipping line " + line)} })` +
+                    ');'
+                    );
+                alert("⚠️ No reaction arrow; skipping line " + line);
                 continue;
             }
 
