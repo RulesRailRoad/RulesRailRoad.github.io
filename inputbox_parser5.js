@@ -93,7 +93,9 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
             }
             if (end !== -1) break;
         }
-        return start !== -1 && end !== -1 ? lines.slice(start + 1, end) : [];
+        return (start !== -1 && end !== -1)
+            ? { lines: lines.slice(start + 1, end), start, end }
+            : { lines: [], start: -1, end: -1 };
     };
 
     let lastComment = null
@@ -173,8 +175,13 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
         }
     }
     } else {
-        console.warn("No Molecule Block");
-        alert("⚠️ No Molecule Block");
+        console.warn("No Molecules Block");
+        output.push('document.getElementById("diagramArea").appendChild(document.createElement("br"));');
+        output.push(
+            'document.getElementById("diagramArea").appendChild(' +
+            `Object.assign(document.createElement("alert"), { textContent: ${JSON.stringify("⚠️ No Molecules Block")} })` +
+            ');'
+            );
     }
 
     const speciesLines = getBlockFlexible(["begin species", "begin seed species"], ["end species", "end seed species"]);
@@ -201,36 +208,57 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
             }
             let parts = line.split(/\s+/);
             for (let part of parts) {
+                if (part.includes(':')) part = part.split(':')[1];
                 if (!part.includes('(')) {
                 if (molSiteDict.hasOwnProperty(part)) {
                     part = MalformedMolecules(part).split(/\s+/);
                 } else {
-                    console.warn("BBBB No relevant molecule exists ", part);
+                    console.warn("No relevant molecule exists " + part);
+                    output.push('document.getElementById("diagramArea").appendChild(document.createElement("br"));');
+                    output.push(
+                    'document.getElementById("diagramArea").appendChild(' +
+                        `Object.assign(document.createElement("alert"), { textContent: ${JSON.stringify("⚠️ No relevant molecule exists: " + part)} })` +
+                    ');'
+                    );
+                    continue;
                 }
             }
             }
             let species = parts.find(p => p.includes('(') && p.includes(')')) || '';
+            if (species.includes(':')) species = species.split(':')[1];
+            
             if (species) {
                 if (!molSiteDict.hasOwnProperty(species.split('(')[0])) {
-                    console.warn("BBBB No relevant molecule exists ", species);
+                    console.warn("No relevant molecule exists " + species.split('(')[0]);
                     output.push('document.getElementById("diagramArea").appendChild(document.createElement("br"));');
                     output.push(
                     'document.getElementById("diagramArea").appendChild(' +
-                        `Object.assign(document.createElement("small"), { textContent: ${JSON.stringify("⚠️ Unrecognized molecule: " + species)} })` +
+                        `Object.assign(document.createElement("alert"), { textContent: ${JSON.stringify("⚠️ No relevant molecule exists: " + species.split('(')[0])} })` +
                     ');'
                     );
                     continue;
                 }
             } else {
-                console.warn("BBBB Invalid species. Species must be an instance of a molecule type");
+                console.warn("Invalid species. Species must be an instance of a molecule type");
+                output.push('document.getElementById("diagramArea").appendChild(document.createElement("br"));');
+                output.push(
+                'document.getElementById("diagramArea").appendChild(' +
+                    `Object.assign(document.createElement("alert"), { textContent: ${JSON.stringify("⚠️ Invalid species. Species must be an instance of a molecule type: " + species)} })` +
+                ');'
+                );
+                continue;
             }
-            if (species.includes(':')) species = species.split(':')[1];
 
             if (species) output.push(bnglToRailroad(species, null, null, molSiteDict, showBNGLString, showMolecules, showBondIndices, null, null));
         }
     } else {
         console.warn("No Species Block");
-        alert("⚠️ No Species Block");
+        output.push('document.getElementById("diagramArea").appendChild(document.createElement("br"));');
+        output.push(
+            'document.getElementById("diagramArea").appendChild(' +
+            `Object.assign(document.createElement("alert"), { textContent: ${JSON.stringify("⚠️ No Species Block")} })` +
+            ');'
+            );
     }
 
     const obsLines = getBlockFlexible(["begin observables"], ["end observables"]);
@@ -283,24 +311,32 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
                             if (molSiteDict.hasOwnProperty(p)) {
                                 return MalformedMolecules(p);
                             } else {
-                                console.warn(" BBBB Unrecognized molecule: " + expr);
+                                console.warn("Unrecognized molecule: " + p);
+                                output.push('document.getElementById("diagramArea").appendChild(document.createElement("br"));');
+                                output.push(
+                                'document.getElementById("diagramArea").appendChild(' +
+                                `Object.assign(document.createElement("alert"), { textContent: ${JSON.stringify("⚠️ Unrecognized molecule: " + p)} })` +
+                                ');'
+                                );
                             }
                         }
                         return p;
                     });
                     expr = splitparts.join('.');
                 } else {
-                    console.warn("BBBBB Unrecognized molecule: " + expr);
+                    console.warn("Unrecognized molecule: " + expr);
                     output.push('document.getElementById("diagramArea").appendChild(document.createElement("br"));');
                     output.push(
                     'document.getElementById("diagramArea").appendChild(' +
-                    `Object.assign(document.createElement("small"), { textContent: ${JSON.stringify("⚠️ Unrecognized molecule: " + expr)} })` +
+                    `Object.assign(document.createElement("alert"), { textContent: ${JSON.stringify("⚠️ Unrecognized molecule: " + expr)} })` +
                     ');'
                     );
                     continue;
                 }
             } else {
                 if (!molSiteDict.hasOwnProperty(expr.split('(')[0])) {
+                    console.warn("Unrecognized molecule: " + expr);
+                    output.push('document.getElementById("diagramArea").appendChild(document.createElement("br"));');
                     output.push(
                     'document.getElementById("diagramArea").appendChild(' +
                     `Object.assign(document.createElement("alert"), { textContent: ${JSON.stringify("⚠️ Unrecognized molecule: " + expr)} })` +
@@ -327,8 +363,13 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
             }
         }
     } else {
-        console.warn("BBBB No Observables Block");
-        alert("⚠️ No Observables Block");
+        console.warn("No Observables Block");
+        output.push('document.getElementById("diagramArea").appendChild(document.createElement("br"));');
+        output.push(
+            'document.getElementById("diagramArea").appendChild(' +
+            `Object.assign(document.createElement("alert"), { textContent: ${JSON.stringify("⚠️ No Observables Block")} })` +
+            ');'
+            );
     }
 
     const reactionLines = getBlockFlexible(["begin reaction"], ["end reaction"]);
@@ -368,6 +409,8 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
             } else if (line.includes('->')) {
                 arrow = '->';
             } else {
+                console.warn("No reaction arrow; skipping line:", line);
+                output.push('document.getElementById("diagramArea").appendChild(document.createElement("br"));');
                 output.push(
                     'document.getElementById("diagramArea").appendChild(' +
                     `Object.assign(document.createElement("alert"), { textContent: ${JSON.stringify("⚠️ No reaction arrow; skipping line " + line)} })` +
@@ -391,7 +434,14 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
                     if (molSiteDict.hasOwnProperty(part)) {
                         part = MalformedMolecules(part);
                     } else {
-                        console.warn("BBBBB No relevant reactant molecule exists ", part);
+                        console.warn("No relevant reactant molecule exists " + part);
+                        output.push('document.getElementById("diagramArea").appendChild(document.createElement("br"));');
+                        output.push(
+                        'document.getElementById("diagramArea").appendChild(' +
+                        `Object.assign(document.createElement("alert"), { textContent: ${JSON.stringify("⚠️ No relevant reactant molecule exists: " + part)} })` +
+                        ');'
+                        ); 
+                        continue;
                     }
                 }
                 if (part.includes('.')) {
@@ -401,7 +451,13 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
                                 const fixed = MalformedMolecules(p);
                                 return fixed;
                             } else {
-                                console.warn(" BBBB Unrecognized reactant molecule: ", p);
+                                console.warn("Unrecognized reactant molecule: " + p);
+                                output.push('document.getElementById("diagramArea").appendChild(document.createElement("br"));');
+                                output.push(
+                                'document.getElementById("diagramArea").appendChild(' +
+                                `Object.assign(document.createElement("alert"), { textContent: ${JSON.stringify("⚠️ Unrecognized reactant molecule: " + p)} })` +
+                                ');'
+                                );
                             }
                         }
                         return p;
@@ -416,7 +472,13 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
                     part = part.split(':')[1];
                 }
                 if (!molSiteDict.hasOwnProperty(part.split("(")[0])) {
-                    console.warn("BBBBB No relevant molecule exists ", part);
+                    console.warn("No relevant molecule exists " + part);
+                    output.push('document.getElementById("diagramArea").appendChild(document.createElement("br"));');
+                    output.push(
+                    'document.getElementById("diagramArea").appendChild(' +
+                    `Object.assign(document.createElement("alert"), { textContent: ${JSON.stringify("⚠️ No relevant reactant molecule exists: " + part)} })` +
+                    ');'
+                    );
                     continue;
                 }
                 display_r.push(part);
@@ -458,7 +520,14 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
                     if (molSiteDict.hasOwnProperty(part)) {
                         part = MalformedMolecules(part);
                     } else {
-                        console.warn("BBBBB No relevant product molecule exists ", part);
+                        console.warn("No relevant product molecule exists " + part);
+                        output.push('document.getElementById("diagramArea").appendChild(document.createElement("br"));');
+                        output.push(
+                        'document.getElementById("diagramArea").appendChild(' +
+                        `Object.assign(document.createElement("alert"), { textContent: ${JSON.stringify("⚠️ No relevant product molecule exists: " + part)} })` +
+                        ');'
+                        ); 
+                        continue;
                     }
                 }
                 if (part.includes('.')) {
@@ -469,13 +538,13 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
                                 const fixed = MalformedMolecules(p);
                                 return fixed;
                             } else {
-                                console.warn(" BBBB Unrecognized product molecule: ", p);
+                                console.warn("Unrecognized product molecule: ", p);
                                 output.push('document.getElementById("diagramArea").appendChild(document.createElement("br"));');
                                 output.push(
                                 'document.getElementById("diagramArea").appendChild(' +
-                                `Object.assign(document.createElement("alert"), { textContent: ${JSON.stringify("⚠️ No relevant molecule exists ", part)} })` +
+                                `Object.assign(document.createElement("alert"), { textContent: ${JSON.stringify("⚠️ Unrecognized product molecule: " + p)} })` +
                                 ');'
-                                );                                
+                                );
                             }
                         }
                         return p;
@@ -494,11 +563,11 @@ export async function parseBNGLFile(fileText, useBNGL, showComments, showBNGLStr
                     part = part.split(':')[1];
                 }
                 if (!molSiteDict.hasOwnProperty(part.split("(")[0])) {
-                    console.warn("No relevant molecule exists ", part);
+                    console.warn("No relevant molecule exists " + part);
                     output.push('document.getElementById("diagramArea").appendChild(document.createElement("br"));');
                     output.push(
                     'document.getElementById("diagramArea").appendChild(' +
-                    `Object.assign(document.createElement("alert"), { textContent: ${JSON.stringify("⚠️ No relevant molecule exists ", part)} })` +
+                    `Object.assign(document.createElement("alert"), { textContent: ${JSON.stringify("⚠️ No relevant molecule exists: " + part)} })` +
                     ');'
                     );
                     continue;
