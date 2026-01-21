@@ -174,12 +174,12 @@
   </div>
 
   <script type="module">
-    import { parseBNGLFile } from './inputbox_parser5.js';
+    import { parseBNGLFile } from './inputbox_parser.js';
     import {
         Diagram, DiagramItem, DiagramMultiContainer, Path, Terminal, NonTerminal, 
         Style, Group, Start, End, Sequence, Choice, Skip, TextDiagram,
         Comment, MultipleChoice, EndWhiteSpace, DEFAULT_STYLE, wrapString
-        } from './railroad5.js';
+        } from './railroad.js';
 
         // Make them global for eval() access
         Object.assign(window, {
