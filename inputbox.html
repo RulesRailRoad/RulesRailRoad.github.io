@@ -126,29 +126,33 @@
 </center>
 </header>
   <h2>Render Direct BNGL Input</h2>
-
+  <p>This section is intended to validate and visualize small parts of the BNGL code. 
+    A necessary part of the BNGL code is molecules. 
+    All other parts are not required. Parameters, functions, kinetic rates are ignored. 
+    This sandbox can be used to check for some code inconsistencies, for example typos in molecules and sites names. 
+    However, it can not be used as a comprehensive BNGL validator.
+  </p>
   <div class="section-flex" style="align-items: flex-left; gap: 0.1em;">
   <div class="controls">
     <label for="bnglTextInput"> Paste/Write BNGL code directly:</label> 
-    <textarea id="bnglTextInput" rows="20" style="width:100%; font-family:monospace;">
+    <textarea id="bnglTextInput" rows="18" style="width:100%; font-family:monospace;">
     begin molecule types
-    # define molecules here
-    # Example: EGFR(l,r,Y1068~u~p,Y1148~u~p)
+    EGFR(l,r,Y1068~u~p,Y1148~u~p)
     end molecule types
 
     begin species
-    # define species here
-    # Example: EGFR(l,r,Y1068~u,Y1148~u)
+    EGFR(l,r,Y1068~u,Y1148~u) 22
+    EGFR(l,r,aa, Y1068~u,Y1148~u) 44 # error - undefined site
+    EGF(l,r,aa, Y1068~u,Y1148~u) 55  # error - undefined molecule
     end species
 
     begin observables
-    # define observables here
-    # Example: Molecules ObsEGFR EGFR()
+    Molecules ObsEGFR EGFR()
+    Molecules ObsEGFR EGFRa() # error - undefined molecule
     end observables
 
     begin reaction rules
-    # define rules here
-    # Example: EGFR(Y1068~u) -> EGFR(Y1068~p)
+    EGFR(Y1068~u) -> EGFR(Y1069~p) kp
     end reaction rules
     </textarea>
     </div>
@@ -165,8 +169,7 @@
 </div>
 
   <button id="visualizeBtn">Render RRR Visualization</button>
-  <br><b>NB:</b>The images at this page are scaled to fit to the page width. To have a proper visualization with all model
-  elements on one page on the same scale, use Save Diagram button.
+
 
   <div id="output">
     <div id="bnglOutput">(BNGL diagram output will appear here)</div>
