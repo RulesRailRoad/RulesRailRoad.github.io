@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RulesRailRoad BNGL Visualizer</title>
+
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 1.5rem;
+      color: #222;
+      background: #fff;
+    }
+
+    header {
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      margin-bottom: 0.25rem;
+    }
+
+    .muted {
+      color: #666;
+      margin-top: 0;
+      word-break: break-word;
+    }
+
+    nav {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin: 0.75rem 0 1rem;
+    }
+
+    nav a {
+      color: #0757a8;
+      text-decoration: underline;
+    }
+
+    .panel {
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 1rem;
+      background: #fafafa;
+      margin-bottom: 1rem;
+    }
+
+    .controls {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      align-items: center;
+      margin: 0.75rem 0;
+    }
+
+    button {
+      padding: 0.55rem 0.85rem;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    label {
+      display: inline-flex;
+      gap: 0.35rem;
+      align-items: center;
+      padding: 0.3rem 0.55rem;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      background: #fff;
+      margin-right: 0.35rem;
+      margin-top: 0.35rem;
+    }
+
+    #status {
+      margin-top: 0.75rem;
+      font-weight: 600;
+      color: #444;
+    }
+
+    #rawBngl {
+      display: none;
+      white-space: pre-wrap;
+      background: #f8f8f8;
+      padding: 1rem;
+      border: 1px solid #ddd;
+      max-height: 360px;
+      overflow: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.85rem;
+    }
+
+    #generatedCode {
+      display: none;
+      white-space: pre-wrap;
+      background: #f8f8f8;
+      padding: 1rem;
+      border: 1px solid #ddd;
+      max-height: 360px;
+      overflow: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.85rem;
+    }
+
+    #diagramAreaContainer {
+      max-height: 780px;
+      overflow: auto;
+      border: 1px solid #ccc;
+      padding: 1rem;
+      background: #fff;
+      box-sizing: border-box;
+    }
+
+    #diagramArea h2 {
+      margin-top: 2em;
+      font-size: 1.8em;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 0.3em;
+    }
+
+    .diagram-block {
+      margin-bottom: 2em;
+    }
+
+    .diagram-block h3 {
+      margin-bottom: 0.5em;
+      font-size: 1.1em;
+      white-space: pre-wrap;
+    }
+
+    svg {
+      border: 1px solid #ccc;
+    }
+
+    svg.railroad-diagram {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      overflow-x: auto;
+    }
+
+    a {
+      color: #0757a8;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>RulesRailRoad BNGL Visualizer</h1>
+    <p class="muted">
+      Dynamically generated from a BNGL file URL.
+    </p>
+
+    <nav>
+      <a href="https://rulesrailroad.github.io/">RulesRailRoad home</a>
+      <a href="https://rulesrailroad.github.io/inputbox.html">BNGL sandbox</a>
+      <a href="https://rulesrailroad.github.io/examples.html">Examples</a>
+      <a href="https://bnglviz.github.io/rulehub.html">RuleHub table</a>
+    </nav>
+  </header>
+
+  <section class="panel">
+    <div class="controls">
+      <button id="reloadModel">Reload model</button>
+      <button id="toggleRaw">Show/Hide raw BNGL</button>
+      <button id="toggleGenerated">Show/Hide generated diagram code</button>
+      <button id="saveDiagram">Save diagram</button>
+      <a id="rawLink" href="#" target="_blank" rel="noopener">Raw BNGL</a>
+      <a id="githubLink" href="#" target="_blank" rel="noopener">GitHub file</a>
+    </div>
+
+    <div>
+      <label>
+        <input type="checkbox" id="showComments" checked />
+        Display commented lines
+      </label>
+
+      <label>
+        <input type="checkbox" id="showBNGLString" checked />
+        Display BNGL next to cartoons
+      </label>
+
+      <label>
+        <input type="checkbox" id="useBNGLNotations" checked />
+        Use BNGL notations
+      </label>
+
+      <label>
+        <input type="checkbox" id="showMolecules" checked />
+        Show molecular names
+      </label>
+
+      <label>
+        <input type="checkbox" id="showBondIndices" />
+        Show bond indices
+      </label>
+    </div>
+
+    <p id="modelInfo" class="muted"></p>
+    <div id="status">Loading...</div>
+  </section>
+
+  <pre id="rawBngl"></pre>
+  <pre id="generatedCode"></pre>
+
+  <div id="diagramAreaContainer">
+    <div id="diagramArea"></div>
+  </div>
+
+  <script type="module">
+    const params = new URLSearchParams(window.location.search);
+
+    const bnglUrl = params.get("bngl");
+    const label = params.get("label") || "RuleHub BNGL model";
+    const githubUrl = params.get("github") || "";
+
+    const statusEl = document.getElementById("status");
+    const modelInfoEl = document.getElementById("modelInfo");
+    const rawBnglEl = document.getElementById("rawBngl");
+    const generatedCodeEl = document.getElementById("generatedCode");
+    const diagramAreaEl = document.getElementById("diagramArea");
+    const rawLinkEl = document.getElementById("rawLink");
+    const githubLinkEl = document.getElementById("githubLink");
+
+    let currentBnglText = "";
+    let railroadStyleText = "";
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    async function fetchText(url) {
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`${response.status} ${response.statusText}: ${url}`);
+      }
+
+      return response.text();
+    }
+
+    function setupLinks() {
+      if (bnglUrl) {
+        rawLinkEl.href = bnglUrl;
+      } else {
+        rawLinkEl.style.display = "none";
+      }
+
+      if (githubUrl) {
+        githubLinkEl.href = githubUrl;
+      } else {
+        githubLinkEl.style.display = "none";
+      }
+    }
+
+    async function loadRulesRailRoadModules() {
+      const [{ parseBNGLFile }, railroad] = await Promise.all([
+        import("./bngl_parser.js"),
+        import("./railroad.js")
+      ]);
+
+      const {
+        Diagram,
+        DiagramItem,
+        DiagramMultiContainer,
+        Path,
+        Terminal,
+        NonTerminal,
+        Style,
+        Group,
+        Start,
+        End,
+        Sequence,
+        Choice,
+        Skip,
+        TextDiagram,
+        Comment,
+        MultipleChoice,
+        EndWhiteSpace,
+        DEFAULT_STYLE,
+        wrapString
+      } = railroad;
+
+      Object.assign(window, {
+        Diagram,
+        DiagramItem,
+        DiagramMultiContainer,
+        Path,
+        Terminal,
+        NonTerminal,
+        Style,
+        Group,
+        Start,
+        End,
+        Sequence,
+        Choice,
+        Skip,
+        TextDiagram,
+        Comment,
+        MultipleChoice,
+        EndWhiteSpace,
+        DEFAULT_STYLE,
+        wrapString
+      });
+
+      railroadStyleText = DEFAULT_STYLE;
+
+      if (!document.getElementById("rulesRailroadStyle")) {
+        const style = document.createElement("style");
+        style.id = "rulesRailroadStyle";
+        style.textContent = DEFAULT_STYLE;
+        document.head.appendChild(style);
+      }
+
+      return { parseBNGLFile };
+    }
+
+    function installDiagramAddFunction() {
+      window.add = function(label, diagram) {
+        const container = document.createElement("div");
+        container.className = "diagram-block";
+
+        const title = document.createElement("h3");
+        title.textContent = label;
+
+        const chunks = [];
+        diagram.writeSvg(chunk => chunks.push(chunk));
+
+        const svgContainer = document.createElement("div");
+        svgContainer.innerHTML = chunks.join("");
+
+        container.appendChild(title);
+        container.appendChild(svgContainer);
+        diagramAreaEl.appendChild(container);
+      };
+    }
+
+    async function visualize() {
+      if (!bnglUrl) {
+        statusEl.textContent =
+          "Error: no BNGL URL was provided. Use ?bngl=<raw BNGL URL>.";
+        return;
+      }
+
+      document.title = `RulesRailRoad — ${label}`;
+      modelInfoEl.innerHTML =
+        `<strong>${escapeHtml(label)}</strong><br>${escapeHtml(bnglUrl)}`;
+
+      statusEl.textContent = `Loading ${label}...`;
+      diagramAreaEl.innerHTML = "";
+      generatedCodeEl.textContent = "";
+
+      try {
+        const { parseBNGLFile } = await loadRulesRailRoadModules();
+
+        currentBnglText = await fetchText(bnglUrl);
+        rawBnglEl.textContent = currentBnglText;
+
+        installDiagramAddFunction();
+
+        const output = await parseBNGLFile(
+          currentBnglText,
+          document.getElementById("useBNGLNotations").checked,
+          document.getElementById("showComments").checked,
+          document.getElementById("showBNGLString").checked,
+          document.getElementById("showMolecules").checked,
+          document.getElementById("showBondIndices").checked
+        );
+
+        generatedCodeEl.textContent = output || "";
+
+        eval(output);
+
+        statusEl.textContent = `Rendered ${label}.`;
+      } catch (error) {
+        console.error(error);
+        statusEl.textContent = `Error: ${error.message}`;
+      }
+    }
+
+    function saveDiagram() {
+      if (!diagramAreaEl.innerHTML.trim()) {
+        alert("No diagram to save.");
+        return;
+      }
+
+      const title = `RulesRailRoad diagrams for ${label}`;
+
+      const htmlContent = `
+        <!doctype html>
+        <html lang="en">
+        <head>
+          <meta charset="utf-8">
+          <title>${escapeHtml(title)}</title>
+          <style>
+            ${railroadStyleText}
+            body {
+              font-family: Arial, Helvetica, sans-serif;
+              margin: 1rem;
+            }
+            .diagram-block {
+              margin-bottom: 2em;
+            }
+            .diagram-block h3 {
+              margin-bottom: 0.5em;
+              font-size: 1.1em;
+              white-space: pre-wrap;
+            }
+            svg {
+              border: 1px solid #ccc;
+            }
+            svg.railroad-diagram {
+              max-width: 100%;
+              height: auto;
+              display: block;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>${escapeHtml(title)}</h1>
+          ${diagramAreaEl.innerHTML}
+        </body>
+        </html>
+      `;
+
+      const blob = new Blob([htmlContent], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download =
+        label.replace(/[^a-z0-9._-]+/gi, "_").replace(/\.bngl$/i, "") +
+        "_rulesrailroad.html";
+
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    document.getElementById("reloadModel").addEventListener("click", visualize);
+
+    document.getElementById("toggleRaw").addEventListener("click", () => {
+      rawBnglEl.style.display =
+        rawBnglEl.style.display === "none" || !rawBnglEl.style.display
+          ? "block"
+          : "none";
+    });
+
+    document.getElementById("toggleGenerated").addEventListener("click", () => {
+      generatedCodeEl.style.display =
+        generatedCodeEl.style.display === "none" || !generatedCodeEl.style.display
+          ? "block"
+          : "none";
+    });
+
+    document.getElementById("saveDiagram").addEventListener("click", saveDiagram);
+
+    [
+      "showComments",
+      "showBNGLString",
+      "useBNGLNotations",
+      "showMolecules",
+      "showBondIndices"
+    ].forEach(id => {
+      document.getElementById(id).addEventListener("change", visualize);
+    });
+
+    setupLinks();
+    visualize();
+  </script>
+</body>
+</html>
